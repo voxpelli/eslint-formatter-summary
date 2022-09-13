@@ -76,7 +76,7 @@
     "@types/eslint": "^8.4.6",
     "@types/node": "^14.18.26",
     "@voxpelli/tsconfig": "^4.0.0",
-    "eslint": "^8.23.0",
+    "eslint": "^8.23.1",
     "husky": "^8.0.0",
     "jest": "^26.6.3",
     "npm-run-all2": "^6.0.2",

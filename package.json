@@ -77,7 +77,7 @@
     "@types/node": "^14.18.26",
     "@voxpelli/tsconfig": "^4.0.0",
     "eslint": "^8.23.1",
-    "husky": "^8.0.0",
+    "husky": "^8.0.1",
     "jest": "^26.6.3",
     "npm-run-all2": "^6.0.2",
     "strip-ansi": "^7.0.1",

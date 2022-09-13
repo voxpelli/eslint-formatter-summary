@@ -24,17 +24,14 @@
     "lib/*.js"
   ],
   "scripts": {
-    "lint:eslint": "eslint lib/",
-    "lint:tsc": "tsc",
-    "lint": "run-p lint:*",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "test-ci:lint": "run-s lint",
-    "test-ci:jest": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
-    "test-ci": "run-s test-ci:*",
-    "try": "eslint -f ./index.cjs",
-    "prettier-write": "prettier --write '**/*.js{,on}'",
-    "prettier-diff": "prettier --list-different '**/*.js{,on}'",
-    "prepare": "husky install"
+    "check:eslint": "eslint --report-unused-disable-directives lib/",
+    "check:tsc": "tsc",
+    "check": "run-p check:*",
+    "prepare": "husky install",
+    "test-ci": "run-s test:*",
+    "test:jest": "node --experimental-vm-modules node_modules/.bin/jest --coverage",
+    "test": "run-s check test:*",
+    "try": "eslint -f ./index.cjs"
   },
   "keywords": [
     "eslint",

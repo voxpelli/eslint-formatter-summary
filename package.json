@@ -1,15 +1,18 @@
 {
-  "name": "eslint-formatter-summary",
+  "name": "@voxpelli/eslint-formatter-summary",
   "version": "1.1.0",
   "description": "ESLint summary formatter aggregating results by rule",
-  "author": "Marton Hipszki <mhipszki@gmail.com>",
+  "author": "Pelle Wessman <pelle@kodfabrik.se> (https://kodfabrik.se/)",
+  "contributors": [
+    "Marton Hipszki <mhipszki@gmail.com>"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mhipszki/eslint-summary-formatter.git"
+    "url": "git+https://github.com/voxpelli/eslint-summary-formatter.git"
   },
   "bugs": {
-    "url": "https://github.com/mhipszki/eslint-summary-formatter/issues"
+    "url": "https://github.com/voxpelli/eslint-summary-formatter/issues"
   },
   "type": "module",
   "exports": "./index.cjs",

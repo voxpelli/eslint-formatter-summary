@@ -9,10 +9,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/voxpelli/eslint-summary-formatter.git"
+    "url": "git+https://github.com/voxpelli/eslint-formatter-summary.git"
   },
   "bugs": {
-    "url": "https://github.com/voxpelli/eslint-summary-formatter/issues"
+    "url": "https://github.com/voxpelli/eslint-formatter-summary/issues"
   },
   "type": "module",
   "exports": "./index.cjs",

@@ -24,8 +24,11 @@
     "lib/*.js"
   ],
   "scripts": {
-    "check:eslint": "eslint --report-unused-disable-directives lib/",
+    "check:dependency-check": "dependency-check index.cjs --no-dev",
+    "check:installed-check": "installed-check -i eslint-plugin-jsdoc",
+    "check:lint": "eslint --report-unused-disable-directives lib/",
     "check:tsc": "tsc",
+    "check:type-coverage": "type-coverage --detail --strict --at-least 99",
     "check": "run-p check:*",
     "prepare": "husky install",
     "test-ci": "eslint -f ./index.cjs lib/",
@@ -41,44 +44,30 @@
     "linting",
     "report"
   ],
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/"
-  },
-  "eslintConfig": {
-    "extends": "eslint:recommended",
-    "env": {
-      "node": true,
-      "es2021": true,
-      "jest": true
-    },
-    "parserOptions": {
-      "ecmaVersion": 10,
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-console": 0
-    }
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/__tests__/**/*.spec.js"
-    ],
-    "testPathIgnorePatterns": [
-      "node_modules"
-    ]
-  },
   "dependencies": {
     "chalk": "^4.1.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.4.6",
     "@types/node": "^14.18.26",
+    "@voxpelli/eslint-config": "^15.2.0",
     "@voxpelli/tsconfig": "^4.0.0",
+    "dependency-check": "^5.0.0-7",
     "eslint": "^8.23.1",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-es": "^4.1.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jsdoc": "^39.3.6",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-n": "^15.2.5",
+    "eslint-plugin-promise": "^6.0.1",
+    "eslint-plugin-security": "^1.5.0",
+    "eslint-plugin-sort-destructure-keys": "^1.4.0",
+    "eslint-plugin-unicorn": "^43.0.2",
     "husky": "^8.0.1",
+    "installed-check": "^6.0.4",
     "npm-run-all2": "^6.0.2",
-    "strip-ansi": "^7.0.1",
+    "type-coverage": "^2.22.0",
     "typescript": "~4.6.0"
   }
 }

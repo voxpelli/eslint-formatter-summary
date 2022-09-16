@@ -31,7 +31,8 @@
     "check:type-coverage": "type-coverage --detail --strict --at-least 99",
     "check": "run-p check:*",
     "prepare": "husky install",
-    "test-ci": "eslint -f ./index.cjs lib/",
+    "test-ci": "run-s test:*",
+    "test:real-world": "eslint -f ./index.cjs lib/",
     "test": "run-s check test:*",
     "try": "eslint -f ./index.cjs"
   },

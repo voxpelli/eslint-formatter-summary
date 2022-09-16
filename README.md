@@ -93,12 +93,11 @@ EFS_OUTPUT=markdown eslint -f @voxpelli/eslint-formatter-summary ./src
 
 Example:
 
-| Errors | Warnings | Rule                               |
-| ------ | -------- | ---------------------------------- |
-|      4 |        0 | [no-multi-spaces](https://eslint.org/docs/rules/no-multi-spaces) |
-|      3 |        0 | [react/jsx-curly-newline](https://github.com/jsx-eslint/eslint-plugin-react/tree/master/docs/rules/jsx-curly-newline.md) |
-|      3 |        0 | [@typescript-eslint/keyword-spacing](https://typescript-eslint.io/rules/keyword-spacing) |
-|      2 |        0 | [space-in-parens](https://eslint.org/docs/rules/space-in-parens) |
+| Errors | Warnings | Rule            |
+| ------ | -------- | --------------- |
+|      1 |        0 | <details><summary>[no-const-assign](https://eslint.org/docs/rules/no-const-assign)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        0 | <details><summary>[no-undef](https://eslint.org/docs/rules/no-undef)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        0 | <details><summary>[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)</summary><ul><li>test.js</li></ul></details> |
 
 ## Supported Node versions
 

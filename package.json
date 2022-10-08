@@ -26,7 +26,7 @@
   "scripts": {
     "check:dependency-check": "dependency-check index.cjs --no-dev",
     "check:installed-check": "installed-check -i eslint-plugin-jsdoc",
-    "check:lint": "eslint --report-unused-disable-directives lib/",
+    "check:lint": "eslint --report-unused-disable-directives lib/ index.cjs",
     "check:tsc": "tsc",
     "check:type-coverage": "type-coverage --detail --strict --at-least 99",
     "check": "run-p check:*",

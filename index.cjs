@@ -5,7 +5,8 @@
  * @param   {import('eslint').ESLint.LintResultData} context
  * @returns {Promise<string>}                                 The formatted output
  */
-module.exports = async function formatter(results, { cwd, rulesMeta }) {
+module.exports = async function formatter (results, { cwd, rulesMeta }) {
+  // eslint-disable-next-line n/no-process-env
   const { EFS_OUTPUT, EFS_SORT_BY, EFS_SORT_DESC } = process.env;
   const { format } = await import('./lib/format-results.js');
 

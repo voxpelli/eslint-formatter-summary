@@ -1,0 +1,13 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    uses: voxpelli/ghatemplates/.github/workflows/gh-publish.yml@main

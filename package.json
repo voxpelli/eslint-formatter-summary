@@ -46,7 +46,8 @@
     "report"
   ],
   "dependencies": {
-    "chalk": "^4.1.0"
+    "chalk": "^5.1.0",
+    "terminal-link": "^3.0.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.4.6",

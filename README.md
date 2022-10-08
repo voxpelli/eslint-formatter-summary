@@ -67,7 +67,7 @@ In the above example we can notice that the `comma-dangle` rule is responsible f
 
 ### Sorting output
 
-> Default sorting is by `rule` in an `ascending` order
+> Default sorting is by `errors` in a `descending` order
 
 Configuration options can be passed to the formatter to alter the output.
 
@@ -77,10 +77,10 @@ Using the`EFS_SORT_BY` env var the aggregated results can be sorted by either `r
 EFS_SORT_BY=rule eslint -f @voxpelli/eslint-formatter-summary ./src
 ```
 
-the sorted results are shown in ASCENDING order by default but the order can also be reversed using `EFS_SORT_DESC=true`:
+sorted string results are shown in ASCENDING order by default and numbers in DESCENDING order, but the order can be reversed using `EFS_SORT_REVERSE=true`:
 
 ```shell
-EFS_SORT_BY=rule EFS_SORT_DESC=true eslint -f @voxpelli/eslint-formatter-summary ./src
+EFS_SORT_BY=rule EFS_SORT_REVERSE=true eslint -f @voxpelli/eslint-formatter-summary ./src
 ```
 
 ### Changing output format

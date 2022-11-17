@@ -46,7 +46,7 @@
     "report"
   ],
   "dependencies": {
-    "chalk": "^5.1.0",
+    "chalk": "^5.1.2",
     "terminal-link": "^3.0.0"
   },
   "devDependencies": {

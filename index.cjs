@@ -15,6 +15,6 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
     output: EFS_OUTPUT,
     sortByProp: EFS_SORT_BY,
     sortReverse: EFS_SORT_REVERSE === 'true',
-    rulesMeta
+    rulesMeta,
   });
 };

@@ -1,11 +1,15 @@
-[![npm version](https://img.shields.io/npm/v/@voxpelli/eslint-formatter-summary.svg?style=flat)](https://www.npmjs.com/package/@voxpelli/eslint-formatter-summary)
-[![npm downloads](https://img.shields.io/npm/dm/@voxpelli/eslint-formatter-summary.svg?style=flat)](https://www.npmjs.com/package/@voxpelli/eslint-formatter-summary)
-
 # @voxpelli/eslint-formatter-summary
 
-> [ESLint](https://eslint.org) formatter aggregating results by rule
+[ESLint](https://eslint.org) formatter aggregating results by rule.
 
-Fork of [mhipszki/eslint-formatter-summary](https://github.com/mhipszki/eslint-formatter-summary) pending the [upstreaming of some/all changes](https://github.com/mhipszki/eslint-formatter-summary/pull/39).
+[![npm version](https://img.shields.io/npm/v/@voxpelli/eslint-formatter-summary.svg?style=flat)](https://www.npmjs.com/package/@voxpelli/eslint-formatter-summary)
+[![npm downloads](https://img.shields.io/npm/dm/@voxpelli/eslint-formatter-summary.svg?style=flat)](https://www.npmjs.com/package/@voxpelli/eslint-formatter-summary)
+[![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-7fffff?style=flat&labelColor=ff80ff)](https://github.com/neostandard/neostandard)
+[![Module type: ESM](https://img.shields.io/badge/module%20type-esm-brightgreen)](https://github.com/voxpelli/badges-cjs-esm)
+[![Types in JS](https://img.shields.io/badge/types_in_js-yes-brightgreen)](https://github.com/voxpelli/types-in-js)
+[![Follow @voxpelli@mastodon.social](https://img.shields.io/mastodon/follow/109247025527949675?domain=https%3A%2F%2Fmastodon.social&style=social)](https://mastodon.social/@voxpelli)
+
+Fork of [mhipszki/eslint-formatter-summary](https://github.com/mhipszki/eslint-formatter-summary).
 
 ## Features
 

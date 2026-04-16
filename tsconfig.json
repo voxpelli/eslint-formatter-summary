@@ -1,5 +1,5 @@
 {
-  "extends": "@voxpelli/tsconfig/node14.json",
+  "extends": "@voxpelli/tsconfig/node20.json",
   "files": [
     "index.cjs"
   ],

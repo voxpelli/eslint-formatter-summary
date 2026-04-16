@@ -54,7 +54,7 @@
     "eslint": ">=9"
   },
   "devDependencies": {
-    "@types/node": "^22.19.17",
+    "@types/node": "^20.19.39",
     "@voxpelli/eslint-config": "^23.0.0",
     "@voxpelli/tsconfig": "^16.1.0",
     "eslint": "^9.39.4",

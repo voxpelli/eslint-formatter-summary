@@ -50,6 +50,9 @@
     "chalk": "^5.1.2",
     "terminal-link": "^3.0.0"
   },
+  "peerDependencies": {
+    "eslint": ">=9"
+  },
   "devDependencies": {
     "@types/node": "^22.19.17",
     "@voxpelli/eslint-config": "^23.0.0",

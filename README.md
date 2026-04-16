@@ -13,9 +13,9 @@ Fork of [mhipszki/eslint-formatter-summary](https://github.com/mhipszki/eslint-f
 
 ## Features
 
-- aggregated errors / warnings **per rule**
+- aggregated errors / warnings / fixable count **per rule**
 - **sort by** rule name, number of errors or warnings
-- _NEW:_ output **markdown**
+- output as **markdown table** or **CSV**
 
 ## TL;DR
 
@@ -37,15 +37,21 @@ EFS_SORT_BY=rule EFS_SORT_DESC=true eslint -f @voxpelli/eslint-formatter-summary
 npm i -D @voxpelli/eslint-formatter-summary
 ```
 
+## Requirements
+
+| Tool       | Version                           | Field in [`package.json`](package.json) |
+| ---------- | --------------------------------- | ------------------------- |
+| Node.js    | The LTS releases of Node.js       | `engines.node`            |
+| TypeScript | Version `>=5.9` (optional)        | `engines.typescript`      |
+| ESLint     | Version `>=9` (only flat configs) | `peerDependencies.eslint` |
+
 ## How to use
 
-When you run ESLint just specify `@voxpelli/eslint-formatter-summary` as the formatter:
+When you run ESLint specify `@voxpelli/eslint-formatter-summary` as the formatter (see [ESLint CLI documentation](http://eslint.org/docs/user-guide/command-line-interface#-f---format)):
 
 ```shell
 eslint -f @voxpelli/eslint-formatter-summary [file|dir|glob]*
 ```
-
-See http://eslint.org/docs/user-guide/command-line-interface#-f---format
 
 ## Intention
 
@@ -87,7 +93,7 @@ sorted string results are shown in ASCENDING order by default and numbers in DES
 EFS_SORT_BY=rule EFS_SORT_REVERSE=true eslint -f @voxpelli/eslint-formatter-summary ./src
 ```
 
-### Changing output format
+### Markdown output
 
 To output the summary as a markdown table, set `EFS_OUTPUT=markdown`
 
@@ -97,19 +103,38 @@ EFS_OUTPUT=markdown eslint -f @voxpelli/eslint-formatter-summary ./src
 
 Example:
 
-| Errors | Warnings | Rule            |
-| ------ | -------- | --------------- |
-|      1 |        0 | <details><summary>[no-const-assign](https://eslint.org/docs/rules/no-const-assign)</summary><ul><li>test.js</li></ul></details> |
-|      1 |        0 | <details><summary>[no-undef](https://eslint.org/docs/rules/no-undef)</summary><ul><li>test.js</li></ul></details> |
-|      1 |        0 | <details><summary>[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)</summary><ul><li>test.js</li></ul></details> |
+| Errors | Warnings | Fixable | Rule            |
+| ------ | -------- | ------- | --------------- |
+|      1 |        - |       1 | <details><summary>[no-const-assign](https://eslint.org/docs/rules/no-const-assign)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        - |       - | <details><summary>[no-undef](https://eslint.org/docs/rules/no-undef)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        - |       - | <details><summary>[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)</summary><ul><li>test.js</li></ul></details> |
 
-## Supported Node versions
+The raw example markdown:
 
-This project targets the current LTS releases of Node.js. See [`engines.node` in `package.json`](package.json).
+```markdown
+| Errors | Warnings | Fixable | Rule            |
+| ------ | -------- | ------- | --------------- |
+|      1 |        - |       1 | <details><summary>[no-const-assign](https://eslint.org/docs/rules/no-const-assign)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        - |       - | <details><summary>[no-undef](https://eslint.org/docs/rules/no-undef)</summary><ul><li>test.js</li></ul></details> |
+|      1 |        - |       - | <details><summary>[no-unused-vars](https://eslint.org/docs/rules/no-unused-vars)</summary><ul><li>test.js</li></ul></details> |
+```
 
-## Supported ESLint versions
+### CSV output
 
-`ESLint` versions are supported from `v8` onwards.
+To output the summary as CSV, set `EFS_OUTPUT=csv`
+
+```shell
+EFS_OUTPUT=csv eslint -f @voxpelli/eslint-formatter-summary ./src
+```
+
+Example:
+
+```csv
+errors,warnings,fixable,rule
+1,0,1,"no-const-assign"
+1,0,0,"no-undef"
+1,0,0,"no-unused-vars"
+```
 
 ## Contribute
 

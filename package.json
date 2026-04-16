@@ -24,7 +24,7 @@
     "lib/*.js"
   ],
   "scripts": {
-    "check:installed-check": "installed-check",
+    "check:installed-check": "installed-check -i @voxpelli/eslint-config",
     "check:knip": "knip",
     "check:lint": "eslint lib/ index.cjs",
     "check:tsc": "tsc",
@@ -50,16 +50,19 @@
     "chalk": "^5.1.2",
     "terminal-link": "^3.0.0"
   },
+  "peerDependencies": {
+    "eslint": ">=9.13.0"
+  },
   "devDependencies": {
-    "@types/node": "^22.19.17",
+    "@types/node": "^20.19.39",
     "@voxpelli/eslint-config": "^23.0.0",
-    "@voxpelli/tsconfig": "^16.1.0",
+    "@voxpelli/tsconfig": "^16.2.1",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",
     "installed-check": "^10.0.1",
     "knip": "^6.4.1",
     "npm-run-all2": "^8.0.4",
     "type-coverage": "^2.29.7",
-    "typescript": "~5.9.0"
+    "typescript": "~6.0.2"
   }
 }

@@ -24,7 +24,7 @@
     "lib/*.js"
   ],
   "scripts": {
-    "check:installed-check": "installed-check",
+    "check:installed-check": "installed-check -i @voxpelli/eslint-config",
     "check:knip": "knip",
     "check:lint": "eslint lib/ index.cjs",
     "check:tsc": "tsc",
@@ -51,7 +51,7 @@
     "terminal-link": "^3.0.0"
   },
   "peerDependencies": {
-    "eslint": ">=9"
+    "eslint": ">=9.13.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.39",

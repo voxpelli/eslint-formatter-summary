@@ -48,7 +48,7 @@
   ],
   "dependencies": {
     "chalk": "^5.1.2",
-    "terminal-link": "^3.0.0"
+    "terminal-link": "^5.0.0"
   },
   "peerDependencies": {
     "eslint": ">=9.13.0"

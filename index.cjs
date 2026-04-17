@@ -7,14 +7,25 @@
  */
 module.exports = async function formatter (results, { cwd, rulesMeta }) {
   // eslint-disable-next-line n/no-process-env
-  const { EFS_OUTPUT, EFS_SORT_BY, EFS_SORT_REVERSE } = process.env;
+  const { EFS_OUTPUT, EFS_SORT_BY, EFS_SORT_REVERSE, GITHUB_STEP_SUMMARY } = process.env;
   const { format } = await import('./lib/format-results.js');
 
-  return format(results, {
+  const options = {
     cwd,
-    output: EFS_OUTPUT,
     sortByProp: EFS_SORT_BY,
     sortReverse: EFS_SORT_REVERSE === 'true',
     rulesMeta,
-  });
+  };
+
+  const output = format(results, { ...options, output: EFS_OUTPUT });
+
+  if (GITHUB_STEP_SUMMARY) {
+    const markdown = EFS_OUTPUT === 'markdown'
+      ? output
+      : format(results, { ...options, output: 'markdown' });
+    const { appendFile } = await import('node:fs/promises');
+    await appendFile(GITHUB_STEP_SUMMARY, markdown + '\n', 'utf8');
+  }
+
+  return output;
 };

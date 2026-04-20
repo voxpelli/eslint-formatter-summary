@@ -30,7 +30,8 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
     try {
       await appendFile(GITHUB_STEP_SUMMARY, markdown + '\n', 'utf8');
     } catch (err) {
-      process.stderr.write(`eslint-formatter-summary: failed to append to $GITHUB_STEP_SUMMARY: ${/** @type {Error} */ (err).message}\n`);
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      process.stderr.write(`eslint-formatter-summary: failed to append to $GITHUB_STEP_SUMMARY (${GITHUB_STEP_SUMMARY}): ${errorMessage}\n`);
     }
   }
 

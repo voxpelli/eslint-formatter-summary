@@ -34,6 +34,7 @@
     "husky-enable": "husky",
     "husky-disable": "git config --unset core.hooksPath",
     "test-ci": "run-s test:*",
+    "test:node": "c8 --reporter=lcov --reporter=text node --test test/*.test.js",
     "test:real-world": "eslint -f ./index.cjs lib/",
     "test": "run-s check test:*",
     "try": "eslint -f ./index.cjs"
@@ -58,6 +59,7 @@
     "@types/node": "^20.19.39",
     "@voxpelli/eslint-config": "^23.0.0",
     "@voxpelli/tsconfig": "^16.2.1",
+    "c8": "^11.0.0",
     "eslint": "^9.39.4",
     "husky": "^9.1.7",
     "installed-check": "^10.0.1",

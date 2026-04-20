@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.1.0...v4.2.0) (2026-04-20)
+
+
+### 🌟 Features
+
+* write markdown summary to $GITHUB_STEP_SUMMARY ([#21](https://github.com/voxpelli/eslint-formatter-summary/issues/21)) ([bb8ba2a](https://github.com/voxpelli/eslint-formatter-summary/commit/bb8ba2ae98a0bb93c400fab7c8e7050d4e6c068f))
+
+
+### 🧹 Chores
+
+* add node:test + c8 unit test suite ([#22](https://github.com/voxpelli/eslint-formatter-summary/issues/22)) ([e1f1a26](https://github.com/voxpelli/eslint-formatter-summary/commit/e1f1a26fa3e404cf977d3a7463a26e763fe5c8d9))
+
 ## [4.1.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.0.0...v4.1.0) (2026-04-16)
 
 

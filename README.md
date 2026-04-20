@@ -136,6 +136,14 @@ errors,warnings,fixable,rule
 1,0,0,"no-unused-vars"
 ```
 
+### GitHub Actions
+
+When running under GitHub Actions, the formatter automatically appends its markdown output to [`$GITHUB_STEP_SUMMARY`](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#adding-a-job-summary), so failing rules surface on the job summary page. This happens regardless of `EFS_OUTPUT` — stdout still uses whatever format you configured.
+
+- Skipped when the run is clean (no errors and no warnings).
+- Opt out with `EFS_GITHUB_STEP_SUMMARY=false` (or `0`) — useful for jobs that should only emit the formatter's stdout.
+- If the write fails (e.g. read-only path), a warning is logged to stderr but the lint run continues.
+
 ## Contribute
 
 Please feel free to submit an issue describing your proposal you would like to discuss. PRs are also welcome!

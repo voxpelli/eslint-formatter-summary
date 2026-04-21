@@ -22,7 +22,7 @@
 | P0.1 | Create THE_PLAN.md                                            | ✅     | —                        | —   | n/a     |
 | P0.2 | Correct SYNERGY doc lines 38-42                               | ✅     | —                        | —   | n/a     |
 | P0.3 | BM note: deferred ideas + revival triggers                    | ✅     | —                        | —   | n/a     |
-| PR 1a+1b | fix+feat!: harden markdown + classify non-rule messages   | 🟠     | P0.1                     | —   | major   |
+| PR 1a+1b | fix+feat!: harden markdown + classify non-rule messages   | 🟠     | P0.1                     | [#24](https://github.com/voxpelli/eslint-formatter-summary/pull/24) | major   |
 | PR 2 | feat: table-cell break handlers (markdown-or-chalk)           | ⬜     | —                        | —   | minor   |
 | PR 3 | feat: EFS_OUTPUT=markdown-per-project                         | ⬜     | PR 1b + PR 2 published   | —   | minor   |
 | PR 4 | feat: EFS_REPO_SLUG + sticky-PR-comment mode                  | ⬜     | PR 3                     | —   | minor   |

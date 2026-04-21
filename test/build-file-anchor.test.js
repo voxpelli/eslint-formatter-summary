@@ -29,6 +29,13 @@ test('renderProjectLabel HTML-escapes an invalid slug', () => {
   assert.ok(!out.includes('<a href='));
 });
 
+test('renderProjectLabel scrubs secret-shaped tokens from the slug', () => {
+  const token = 'npm_' + 'A'.repeat(40);
+  const out = renderProjectLabel(`owner/${token}`);
+  assert.ok(!out.includes(token), 'raw token must not survive into rendered slug');
+  assert.ok(out.includes('[REDACTED]'));
+});
+
 test('renderFileSpan produces a blob/HEAD anchor for valid slug + path:line', () => {
   const out = renderFileSpan('src/foo.js:42', 'owner/repo');
   assert.match(out, /href="https:\/\/github\.com\/owner\/repo\/blob\/HEAD\/src\/foo\.js#L42"/);

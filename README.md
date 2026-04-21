@@ -16,6 +16,7 @@ Fork of [mhipszki/eslint-formatter-summary](https://github.com/mhipszki/eslint-f
 - aggregated errors / warnings / fixable count **per rule**
 - **sort by** rule name, number of errors or warnings
 - output as **markdown table** or **CSV**
+- **`eslint-summary` CLI** for fan-in aggregation across many projects (see [CLI](#cli))
 
 ## TL;DR
 
@@ -143,6 +144,50 @@ When running under GitHub Actions, the formatter automatically appends its markd
 - Skipped when the run is clean (no errors and no warnings).
 - Opt out with `EFS_GITHUB_STEP_SUMMARY=false` (or `0`) — useful for jobs that should only emit the formatter's stdout.
 - If the write fails (e.g. read-only path), a warning is logged to stderr but the lint run continues.
+
+## CLI
+
+The package also ships an `eslint-summary` CLI, intended for fan-in scenarios where many projects are linted separately (e.g. a matrix GitHub Actions workflow) and the individual runs need to be aggregated into one sticky PR comment or one job summary.
+
+Two subcommands:
+
+### `eslint-summary prepare [input-file]`
+
+Reduces one project's raw `eslint --format json` output into an intermediate `ProjectResult` JSON blob. Reads from `<input-file>` or from stdin when no positional is given.
+
+```shell
+# From a file
+eslint-summary prepare --project owner/repo project/eslint-results.json > result.json
+
+# Piped
+eslint --format json | eslint-summary prepare --project owner/repo > result.json
+```
+
+Flags: `--project <owner/repo>` (or env `EFS_PROJECT_NAME`), `--out <path>` (default `-` = stdout), `--cwd <path>` (strip-prefix for relative file paths).
+
+### `eslint-summary aggregate <results-dir>`
+
+Fans N `ProjectResult` JSON files (one per subdirectory) into a sticky-PR-comment markdown document.
+
+```shell
+# Write a capped comment body for sticky-PR-comment posting
+eslint-summary aggregate --project-count 25 --out comment.md results/
+
+# Uncapped output to the GitHub Actions job summary
+eslint-summary aggregate --full results/ >> "$GITHUB_STEP_SUMMARY"
+```
+
+Flags: `--full` (uncapped markdown), `--project-count <n>` (for "all N pass" message; env `EXTERNAL_PROJECT_COUNT`), `--out <path>`, `--sort-by <project|severity>`, `--size-cap <bytes>` (default 60000; env `EFS_SIZE_CAP`), `--file-cap <n>` (per-rule file-entry cap, default 50).
+
+### Defensive sanitization
+
+Rule ids, file paths, and message details rendered into markdown output (both CLI and formatter paths) pass through a sanitization layer that:
+
+- Strips bidi / zero-width control codepoints (defense against trojan-source rendering).
+- Scrubs substrings matching known secret shapes (`ghp_…` / `ghs_…` / `ghu_…` / `npm_…` / AWS `AKIA…` / PEM block headers) with `[REDACTED]`.
+- Caps string length so a pathological rule name cannot distort the rendered table.
+
+This is defense-in-depth: a misbehaving ESLint plugin or an attacker-authored fork PR (in a canary / fleet-lint setup) should not be able to echo tokens back via the PR sticky comment or the Actions job summary. The CSV branch is unaffected (machine output) and the terminal-colored branch is unaffected (no HTML rendering surface).
 
 ## Contribute
 

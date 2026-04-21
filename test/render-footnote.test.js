@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import renderFootnote from '../lib/cli/render-footnote.js';
+import { SYNTHETIC_FOOTNOTE_TEXT } from '../lib/synthetic-footnote-text.js';
 
 /** @type {import('../lib/cli/prepare-project-result.js').ProjectResult} */
 const base = {
@@ -45,4 +46,12 @@ test('renderFootnote sorts keys alphabetically', () => {
 test('renderFootnote excludes (invalid rule id) intentionally', () => {
   const out = renderFootnote([{ ...base, syntheticKeys: ['(invalid rule id)'] }]);
   assert.equal(out, '');
+});
+
+test('renderFootnote uses the shared synthetic-footnote-text module', () => {
+  const out = renderFootnote([{ ...base, syntheticKeys: ['(parser error)'] }]);
+  assert.ok(
+    out.includes(SYNTHETIC_FOOTNOTE_TEXT['(parser error)']),
+    'CLI footnote must render the canonical shared prose for (parser error)',
+  );
 });

@@ -13,11 +13,11 @@ const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.ur
  * @param {{ cwd?: string, input?: string, env?: Record<string, string> }} [options]
  * @returns {Promise<{ stdout: string, stderr: string, code: number }>}
  */
-const runCli = (argv, { cwd, env } = {}) => new Promise((resolve, reject) => {
+const runCli = (argv, { cwd, input, env } = {}) => new Promise((resolve, reject) => {
   const child = spawn(process.execPath, [binPath, ...argv], {
     cwd,
     env: { ...process.env, ...env },
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
   });
   let stdout = '';
   let stderr = '';
@@ -25,6 +25,10 @@ const runCli = (argv, { cwd, env } = {}) => new Promise((resolve, reject) => {
   child.stderr.on('data', (chunk) => { stderr += String(chunk); });
   child.on('error', reject);
   child.on('close', (code) => { resolve({ stdout, stderr, code: code ?? 0 }); });
+  if (input !== undefined && child.stdin) {
+    child.stdin.write(input);
+    child.stdin.end();
+  }
 });
 
 /** @param {import('../lib/cli/prepare-project-result.js').ProjectResult} p */
@@ -118,10 +122,27 @@ test('prepare: exits 0 with no output when the run has zero findings', async () 
   }
 });
 
-test('prepare: exits 2 when no positional argument is given', async () => {
-  const { code, stderr } = await runCli(['prepare']);
-  assert.equal(code, 2);
-  assert.match(stderr, /expected exactly one <input-file>/);
+test('prepare: exits 1 with "empty stdin" when no positional and stdin is empty', async () => {
+  const { code, stderr } = await runCli(['prepare'], { input: '' });
+  assert.equal(code, 1);
+  assert.match(stderr, /empty stdin/);
+});
+
+test('prepare: reads raw ESLint JSON from stdin when no positional given', async () => {
+  const { stdout, stderr, code } = await runCli(
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj'],
+    { input: JSON.stringify(rawFixture) },
+  );
+  assert.equal(code, 0, `exit code was ${code}; stderr: ${stderr}`);
+  const parsed = JSON.parse(stdout);
+  assert.equal(parsed.project, 'acme/demo');
+  assert.deepEqual(parsed.rules['no-unused-vars'].files, ['src/a.js:10', 'src/a.js:22']);
+});
+
+test('prepare: exits 1 on invalid JSON from stdin (reports source as stdin)', async () => {
+  const { code, stderr } = await runCli(['prepare'], { input: 'not-json' });
+  assert.equal(code, 1);
+  assert.match(stderr, /invalid JSON in stdin/);
 });
 
 test('prepare: exits 1 when the input file cannot be read', async () => {
@@ -267,7 +288,7 @@ test('aggregate: --size-cap triggers truncation end-to-end with tail-summary blo
   }
 });
 
-test('aggregate: writes uncapped report to $GITHUB_STEP_SUMMARY before truncating stdout', async () => {
+test('aggregate: $GITHUB_STEP_SUMMARY env var has no effect (callers redirect --full explicitly)', async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
   try {
     const results = path.join(tmp, 'results');
@@ -282,11 +303,63 @@ test('aggregate: writes uncapped report to $GITHUB_STEP_SUMMARY before truncatin
       env: { GITHUB_STEP_SUMMARY: stepSummary },
     });
     assert.equal(code, 0);
-    const { readFile } = await import('node:fs/promises');
-    const written = await readFile(stepSummary, 'utf8');
-    // The step summary should contain the same project block the stdout has
-    assert.match(written, /acme\/demo/);
     assert.match(stdout, /acme\/demo/);
+    const { readFile, stat } = await import('node:fs/promises');
+    let exists = false;
+    try { await stat(stepSummary); exists = true; } catch { /* expected */ }
+    assert.equal(exists, false, 'aggregate must not auto-write to $GITHUB_STEP_SUMMARY');
+    // readFile import kept to match prior style in sibling test; no-op here
+    void readFile;
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const results = path.join(tmp, 'results');
+    for (let i = 0; i < 5; i++) {
+      await writeResultArtifact(results, {
+        project: `acme/proj-${i}`,
+        errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+        syntheticKeys: [],
+        rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: Array.from({ length: 200 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
+      });
+    }
+    const { stdout, code } = await runCli(['aggregate', '--full', '--size-cap', '20000', '--file-cap', '200', results]);
+    assert.equal(code, 0);
+    assert.doesNotMatch(stdout, /<summary>Tail projects/);
+    assert.doesNotMatch(stdout, /file:line detail truncated/);
+    // All five projects should appear in full
+    for (let i = 0; i < 5; i++) assert.match(stdout, new RegExp(`acme/proj-${i}`));
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const results = path.join(tmp, 'results');
+    const ghToken = 'ghp_' + 'A'.repeat(40);
+    const npmToken = 'npm_' + 'B'.repeat(40);
+    const awsKey = 'AKIAIOSFODNN7EXAMPLE';
+    await writeResultArtifact(results, {
+      project: 'acme/demo',
+      errorCount: 3, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      syntheticKeys: [],
+      rules: {
+        [`rule-${ghToken}`]: { errors: 1, warnings: 0, fixable: 0, files: [`src/${npmToken}.js:1`] },
+        [`rule-${awsKey}`]: { errors: 2, warnings: 0, fixable: 0, files: ['src/b.js:1'] },
+      },
+    });
+    const { stdout, code } = await runCli(['aggregate', results]);
+    assert.equal(code, 0);
+    assert.doesNotMatch(stdout, new RegExp(ghToken));
+    assert.doesNotMatch(stdout, new RegExp(npmToken));
+    assert.doesNotMatch(stdout, new RegExp(awsKey));
+    assert.match(stdout, /\[REDACTED\]/);
   } finally {
     await rm(tmp, { recursive: true, force: true });
   }

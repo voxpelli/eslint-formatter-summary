@@ -45,7 +45,9 @@ Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · �
 - Dev dep bumps: `@voxpelli/eslint-config` → ^25 for the `cliFiles` option
 - AC:
   - `eslint-summary prepare <raw.json>` emits `ProjectResult` JSON matching the sibling shape
-  - `eslint-summary aggregate <results-dir>` emits the sticky-PR-comment markdown with truncation + step-summary mirror
+  - `eslint-summary aggregate <results-dir>` emits the sticky-PR-comment markdown with truncation; `--full` emits uncapped markdown (caller redirects to `$GITHUB_STEP_SUMMARY` explicitly)
+  - `eslint-summary prepare` reads from stdin when no `<input-file>` positional is given (`eslint --format json | eslint-summary prepare`)
+  - Untrusted strings (rule ids, file paths, message details) pass through length-cap + secret-scrub before HTML escape
   - Formatter entry (`index.cjs`) and `lib/format-results.js` behavior unchanged
   - Full test suite green, including the real-world self-host
   - File-path entries include `:line` only in CLI output (not in formatter markdown)

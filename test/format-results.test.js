@@ -186,3 +186,28 @@ test('format() sortReverse inverts order', () => {
   const reversedRows = reversed.split('\n').slice(1);
   assert.deepEqual([...forwardRows].reverse(), reversedRows);
 });
+
+test('format() markdown: scrubs secret-shaped tokens in rule ids and file paths', () => {
+  const token = 'ghp_' + 'A'.repeat(40);
+  const fileToken = 'npm_' + 'B'.repeat(40);
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const fx = /** @type {any} */ ([{
+    filePath: `/proj/src/${fileToken}.js`,
+    messages: [{ ruleId: `rule-${token}`, severity: 2, line: 1, column: 1, message: 'x' }],
+  }]);
+  const out = format(fx, { cwd: '/proj', output: 'markdown' });
+  assert.ok(!out.includes(token), 'GitHub PAT must not survive into formatter markdown');
+  assert.ok(!out.includes(fileToken), 'npm token in file path must not survive');
+  assert.match(out, /\[REDACTED\]/);
+});
+
+test('format() csv: secret-shaped rule ids pass through untouched (machine-consumed)', () => {
+  const token = 'ghp_' + 'A'.repeat(40);
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const fx = /** @type {any} */ ([{
+    filePath: '/proj/src/a.js',
+    messages: [{ ruleId: `rule-${token}`, severity: 2, line: 1, column: 1, message: 'x' }],
+  }]);
+  const out = format(fx, { cwd: '/proj', output: 'csv' });
+  assert.ok(out.includes(token), 'CSV branch intentionally does not sanitize — machine output');
+});

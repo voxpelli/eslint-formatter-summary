@@ -14,7 +14,7 @@ test('stripControls removes bidi overrides (U+202A–U+202E)', () => {
 });
 
 test('stripControls removes word-joiner / invisible-operator range (U+2060–U+2069)', () => {
-  for (const cp of [0x2060, 0x2061, 0x2062, 0x2066, 0x2069]) {
+  for (let cp = 0x2060; cp <= 0x2069; cp++) {
     assert.equal(stripControls('x' + String.fromCodePoint(cp) + 'y'), 'xy', `failed for U+${cp.toString(16)}`);
   }
 });

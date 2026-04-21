@@ -1,42 +1,9 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
-import os from 'node:os';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
-import { fileURLToPath } from 'node:url';
 
-const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.url));
-
-/**
- * @param {string[]} argv
- * @param {{ cwd?: string, input?: string, env?: Record<string, string> }} [options]
- * @returns {Promise<{ stdout: string, stderr: string, code: number }>}
- */
-const runCli = (argv, { cwd, input, env } = {}) => new Promise((resolve, reject) => {
-  const child = spawn(process.execPath, [binPath, ...argv], {
-    cwd,
-    env: { ...process.env, ...env },
-    stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
-  });
-  let stdout = '';
-  let stderr = '';
-  child.stdout.on('data', (chunk) => { stdout += String(chunk); });
-  child.stderr.on('data', (chunk) => { stderr += String(chunk); });
-  child.on('error', reject);
-  child.on('close', (code) => { resolve({ stdout, stderr, code: code ?? 0 }); });
-  if (input !== undefined && child.stdin) {
-    child.stdin.write(input);
-    child.stdin.end();
-  }
-});
-
-/** @param {import('../lib/cli/prepare-project-result.js').ProjectResult} p */
-const writeResultArtifact = async (dir, p) => {
-  const sub = path.join(dir, p.project.replace(/\//g, '-'));
-  await mkdir(sub, { recursive: true });
-  await writeFile(path.join(sub, 'eslint-result.json'), JSON.stringify(p), 'utf8');
-};
+import { makeTmpDir, runCli, writeResultArtifact } from './_helpers.js';
 
 const rawFixture = [
   {
@@ -54,7 +21,7 @@ const rawFixture = [
 ];
 
 test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     await writeFile(inputFile, JSON.stringify(rawFixture), 'utf8');
@@ -68,12 +35,12 @@ test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', 
     assert.equal(parsed.errorCount, 2);
     assert.deepEqual(parsed.rules['no-unused-vars'].files, ['src/a.js:10', 'src/a.js:22']);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     await writeFile(inputFile, JSON.stringify(rawFixture), 'utf8');
@@ -85,12 +52,12 @@ test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async
     const parsed = JSON.parse(stdout);
     assert.equal(parsed.project, 'from/env');
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('prepare: writes to --out file and emits nothing to stdout', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     const outFile = path.join(tmp, 'out.json');
@@ -105,12 +72,12 @@ test('prepare: writes to --out file and emits nothing to stdout', async () => {
     const parsed = JSON.parse(written);
     assert.equal(parsed.project, 'acme/demo');
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('prepare: exits 0 with no output when the run has zero findings', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     await writeFile(inputFile, JSON.stringify([{ filePath: '/proj/a.js', errorCount: 0, warningCount: 0, messages: [] }]), 'utf8');
@@ -118,7 +85,7 @@ test('prepare: exits 0 with no output when the run has zero findings', async () 
     assert.equal(code, 0);
     assert.equal(stdout, '');
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
@@ -152,7 +119,7 @@ test('prepare: exits 1 when the input file cannot be read', async () => {
 });
 
 test('prepare: exits 1 on invalid JSON input', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'bad.json');
     await writeFile(inputFile, 'not-json', 'utf8');
@@ -160,12 +127,12 @@ test('prepare: exits 1 on invalid JSON input', async () => {
     assert.equal(code, 1);
     assert.match(stderr, /invalid JSON/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: emits "all N pass" on empty results directory', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -173,12 +140,12 @@ test('aggregate: emits "all N pass" on empty results directory', async () => {
     assert.equal(code, 0);
     assert.match(stdout, /All 5 external projects pass/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: renders fleet sticky-PR-comment from per-project artifacts', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
@@ -194,12 +161,12 @@ test('aggregate: renders fleet sticky-PR-comment from per-project artifacts', as
     assert.match(stdout, /no-unused-vars/);
     assert.match(stdout, /blob\/HEAD\/src\/a\.js#L10/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: --sort-by severity orders projects by error count desc', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
@@ -223,12 +190,12 @@ test('aggregate: --sort-by severity orders projects by error count desc', async 
     const sevZeta = severity.indexOf('acme/zeta');
     assert.ok(sevZeta < sevAlpha, 'severity: zeta (5 errors) before alpha (1 error)');
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: --sort-by with invalid value exits 2', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -236,7 +203,7 @@ test('aggregate: --sort-by with invalid value exits 2', async () => {
     assert.equal(code, 2);
     assert.match(stderr, /--sort-by must be "project" or "severity"/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
@@ -253,7 +220,7 @@ test('aggregate: exits 1 when results directory is missing (no silent all-pass)'
 });
 
 test('aggregate: exits 2 on non-numeric --size-cap', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -261,12 +228,12 @@ test('aggregate: exits 2 on non-numeric --size-cap', async () => {
     assert.equal(code, 2);
     assert.match(stderr, /--size-cap must be numeric/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: --size-cap triggers truncation end-to-end with tail-summary block', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     // Five projects; cap is small enough that some will overflow to tail.
@@ -284,12 +251,12 @@ test('aggregate: --size-cap triggers truncation end-to-end with tail-summary blo
     assert.match(stdout, /<summary>Tail projects \(\d+ truncated/, 'tail-summary block should appear when truncation fires');
     assert.match(stdout, /file:line detail truncated for tail projects/, 'trailer sentence should appear');
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: $GITHUB_STEP_SUMMARY env var has no effect (callers redirect --full explicitly)', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
@@ -311,12 +278,12 @@ test('aggregate: $GITHUB_STEP_SUMMARY env var has no effect (callers redirect --
     // readFile import kept to match prior style in sibling test; no-op here
     void readFile;
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     for (let i = 0; i < 5; i++) {
@@ -334,12 +301,12 @@ test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', asyn
     // All five projects should appear in full
     for (let i = 0; i < 5; i++) assert.match(stdout, new RegExp(`acme/proj-${i}`));
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     const ghToken = 'ghp_' + 'A'.repeat(40);
@@ -361,12 +328,12 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
     assert.doesNotMatch(stdout, new RegExp(awsKey));
     assert.match(stdout, /\[REDACTED\]/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });
 
 test('prepare: stderr warns when filePaths escape --cwd', async () => {
-  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  const { dir: tmp, cleanup } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     // filePath is under /elsewhere/... but cwd is /repo; path.relative produces ../
@@ -381,6 +348,6 @@ test('prepare: stderr warns when filePaths escape --cwd', async () => {
     assert.equal(code, 0);
     assert.match(stderr, /filePath outside --cwd/);
   } finally {
-    await rm(tmp, { recursive: true, force: true });
+    await cleanup();
   }
 });

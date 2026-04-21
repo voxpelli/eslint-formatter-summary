@@ -224,3 +224,90 @@ test('aggregate: exits 2 when no positional argument is given', async () => {
   assert.equal(code, 2);
   assert.match(stderr, /expected exactly one <results-dir>/);
 });
+
+test('aggregate: exits 1 when results directory is missing (no silent all-pass)', async () => {
+  const { code, stderr } = await runCli(['aggregate', '/definitely/does/not/exist']);
+  assert.equal(code, 1);
+  assert.match(stderr, /results directory not found/);
+});
+
+test('aggregate: exits 2 on non-numeric --size-cap', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const results = path.join(tmp, 'results');
+    await mkdir(results, { recursive: true });
+    const { code, stderr } = await runCli(['aggregate', '--size-cap', 'abc', results]);
+    assert.equal(code, 2);
+    assert.match(stderr, /--size-cap must be numeric/);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('aggregate: --size-cap triggers truncation end-to-end with tail-summary block', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const results = path.join(tmp, 'results');
+    // Five projects; cap is small enough that some will overflow to tail.
+    for (let i = 0; i < 5; i++) {
+      await writeResultArtifact(results, {
+        project: `acme/proj-${i}`,
+        errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+        syntheticKeys: [],
+        // Pad each rule's files list to make blocks large
+        rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: Array.from({ length: 200 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
+      });
+    }
+    const { stdout, code } = await runCli(['aggregate', '--size-cap', '20000', '--file-cap', '200', results]);
+    assert.equal(code, 0);
+    assert.match(stdout, /<summary>Tail projects \(\d+ truncated/, 'tail-summary block should appear when truncation fires');
+    assert.match(stdout, /file:line detail truncated for tail projects/, 'trailer sentence should appear');
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('aggregate: writes uncapped report to $GITHUB_STEP_SUMMARY before truncating stdout', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const results = path.join(tmp, 'results');
+    await writeResultArtifact(results, {
+      project: 'acme/demo',
+      errorCount: 2, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      syntheticKeys: [],
+      rules: { foo: { errors: 2, warnings: 0, fixable: 0, files: ['a.js:1', 'a.js:2'] } },
+    });
+    const stepSummary = path.join(tmp, 'step-summary.md');
+    const { stdout, code } = await runCli(['aggregate', results], {
+      env: { GITHUB_STEP_SUMMARY: stepSummary },
+    });
+    assert.equal(code, 0);
+    const { readFile } = await import('node:fs/promises');
+    const written = await readFile(stepSummary, 'utf8');
+    // The step summary should contain the same project block the stdout has
+    assert.match(written, /acme\/demo/);
+    assert.match(stdout, /acme\/demo/);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});
+
+test('prepare: stderr warns when filePaths escape --cwd', async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), 'efs-cli-'));
+  try {
+    const inputFile = path.join(tmp, 'raw.json');
+    // filePath is under /elsewhere/... but cwd is /repo; path.relative produces ../
+    await writeFile(inputFile, JSON.stringify([{
+      filePath: '/elsewhere/src/a.js',
+      errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      messages: [{ ruleId: 'no-undef', severity: 2, line: 1, message: 'x' }],
+    }]), 'utf8');
+    const { code, stderr } = await runCli(
+      ['prepare', '--project', 'acme/demo', '--cwd', '/repo', inputFile],
+    );
+    assert.equal(code, 0);
+    assert.match(stderr, /filePath outside --cwd/);
+  } finally {
+    await rm(tmp, { recursive: true, force: true });
+  }
+});

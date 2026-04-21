@@ -29,7 +29,7 @@
 | P0.3 | BM note: deferred ideas + revival triggers                    | ✅     | —                        | —   | n/a     |
 | PR 1a+1b | fix+feat!: harden markdown + classify non-rule messages   | ✅     | P0.1                     | [#24](https://github.com/voxpelli/eslint-formatter-summary/pull/24) | major   |
 | PR 2 | ~~markdown-or-chalk break handlers~~                          | ❌ dropped | —                     | n/a | n/a     |
-| PR 3 | feat: add eslint-summary CLI (prepare + aggregate)            | 🟡     | PR 1b                    | —   | minor   |
+| PR 3 | feat: add eslint-summary CLI (prepare + aggregate)            | 🟠     | PR 1b                    | [#26](https://github.com/voxpelli/eslint-formatter-summary/pull/26) | minor   |
 | PR 4 | refactor(canary): consume eslint-summary, delete bespoke tools (eslint-config-voxpelli) | ⬜ | PR 3 published | —  | n/a     |
 
 Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · ❌ dropped · 🔴 blocked

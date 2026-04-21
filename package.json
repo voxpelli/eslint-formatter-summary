@@ -16,18 +16,23 @@
   },
   "type": "module",
   "exports": "./index.cjs",
+  "bin": {
+    "eslint-summary": "./bin/eslint-summary.js"
+  },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24.0.0",
     "typescript": ">=5.9"
   },
   "files": [
+    "bin/eslint-summary.js",
     "index.cjs",
-    "lib/*.js"
+    "lib/*.js",
+    "lib/cli/*.js"
   ],
   "scripts": {
     "check:installed-check": "installed-check -i @voxpelli/eslint-config",
     "check:knip": "knip",
-    "check:lint": "eslint lib/ index.cjs",
+    "check:lint": "eslint bin/ lib/ index.cjs",
     "check:tsc": "tsc",
     "check:type-coverage": "type-coverage --detail --strict --at-least 99",
     "check": "run-p check:*",
@@ -50,6 +55,8 @@
   ],
   "dependencies": {
     "chalk": "^5.1.2",
+    "peowly": "^1.3.3",
+    "peowly-commands": "^1.1.0",
     "terminal-link": "^5.0.0"
   },
   "peerDependencies": {
@@ -57,7 +64,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.39",
-    "@voxpelli/eslint-config": "^23.0.0",
+    "@voxpelli/eslint-config": "^25.0.3",
     "@voxpelli/tsconfig": "^16.2.1",
     "c8": "^11.0.0",
     "eslint": "^9.39.4",

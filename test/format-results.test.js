@@ -84,6 +84,50 @@ test('format() default CLI output contains header, rule rows, and totals', () =>
   assert.ok(out.includes('fixable'));
 });
 
+test('format() markdown escapes </details> inside file paths so nesting cannot break', () => {
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const injected = /** @type {any} */ ([{
+    filePath: '/proj/src/weird</details><script>alert(1)</script>.js',
+    messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
+  }]);
+  const out = format(injected, { cwd: '/proj', output: 'markdown' });
+  assert.ok(!out.includes('</details><script>'), 'raw </details> leaked into markdown output');
+  assert.ok(out.includes('&lt;/details&gt;'), 'expected HTML-escaped </details> in path');
+});
+
+test('format() markdown drops non-http docs URLs (javascript: scheme is stripped)', () => {
+  const out = format(fixture, {
+    cwd: '/proj',
+    output: 'markdown',
+    rulesMeta: {
+      semi: { docs: { url: /** @type {any} */ ('javascript:alert(1)') } },
+    },
+  });
+  assert.ok(!out.includes('javascript:'), 'javascript: URL leaked into markdown link');
+  assert.ok(out.includes('semi'), 'rule id should still render as plain text');
+  assert.ok(!/\[semi\]\(/.test(out), 'no markdown link should be emitted for unsafe URL');
+});
+
+test('format() markdown escapes HTML-special chars in rule ids', () => {
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const injected = /** @type {any} */ ([{
+    filePath: '/p/a.js',
+    messages: [{ ruleId: 'my-plugin/<script>', severity: 2, line: 1, column: 1, message: 'x' }],
+  }]);
+  const out = format(injected, { cwd: '/p', output: 'markdown' });
+  assert.ok(!out.includes('<script>'), 'raw <script> leaked into markdown summary');
+  assert.ok(out.includes('&lt;script&gt;'));
+});
+
+test('format() markdown keeps https URLs (positive control for allowlist)', () => {
+  const out = format(fixture, {
+    cwd: '/proj',
+    output: 'markdown',
+    rulesMeta: { semi: { docs: { url: 'https://example.test/semi' } } },
+  });
+  assert.match(out, /\[semi\]\(https:\/\/example\.test\/semi\)/);
+});
+
 test('format() sortReverse inverts order', () => {
   const forward = format(fixture, { cwd: '/proj', output: 'csv' });
   const reversed = format(fixture, { cwd: '/proj', output: 'csv', sortReverse: true });

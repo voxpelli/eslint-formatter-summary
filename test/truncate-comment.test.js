@@ -54,11 +54,41 @@ test('truncateComment appends the step-summary trailer', () => {
   assert.match(out, /file:line detail truncated for tail projects/);
 });
 
-test('truncateComment handles case where even the first block exceeds the slice', () => {
+test('truncateComment handles case where the first block exceeds the slice window', () => {
+  // Build a fixture that is larger than sizeCap so truncation actually runs,
+  // and where the first block alone is larger than `sizeCap - HEADROOM` so
+  // the initial slice contains no closing </details> anchor. Exercises the
+  // lastClose === -1 fallback branch in truncate-comment.
+  const fatBlock = '<details>\n<summary>owner/proj-0</summary>\n\n' +
+    'x'.repeat(20_000) + '\n</details>\n\n';
   const results = [makeProject(0)];
-  const md = renderBlock(0);
-  // sizeCap so small that slice is empty; should still return something sensible
-  const out = truncateComment(md, results, { sizeCap: 16_000 });
-  // output should at minimum contain the tail summary for the dropped project
-  assert.ok(out.includes('owner/proj-0') || out === md);
+  assert.ok(Buffer.byteLength(fatBlock, 'utf8') > 18_000, 'fixture must exceed cap');
+  const out = truncateComment(fatBlock, results, { sizeCap: 18_000 });
+  assert.notEqual(out, fatBlock, 'must have been truncated');
+  assert.ok(out.includes('owner/proj-0'), 'dropped project should appear in tail');
+  assert.match(out, /<summary>Tail projects \(1 truncated/);
+});
+
+test('truncateComment clamps gracefully when sizeCap is below HEADROOM', () => {
+  // sizeCap (5000) < HEADROOM (15000) → (sizeCap - HEADROOM) is negative.
+  // Without the Math.max(0, …) clamp, Buffer.subarray would interpret the
+  // negative end as (buf.length + end), silently yielding a wrong slice.
+  const results = Array.from({ length: 3 }, (_, i) => makeProject(i));
+  const md = results.map((_, i) => renderBlock(i)).join('');
+  const out = truncateComment(md, results, { sizeCap: 5_000 });
+  assert.ok(Buffer.byteLength(out, 'utf8') <= 20_000, 'output must not balloon');
+  assert.match(out, /<summary>Tail projects \(3 truncated/);
+});
+
+test('truncateComment output stays within the byte cap even with multi-byte content', () => {
+  // Each '中' is 3 UTF-8 bytes. A code-unit slice at N chars would re-encode
+  // to up to ~3N bytes, blowing the cap. Byte-safe slice must hold the line.
+  const cjkBlock = (i) =>
+    `<details>\n<summary>owner/proj-${i}</summary>\n\n` +
+    '中'.repeat(1500) + '\n</details>\n\n';
+  const results = Array.from({ length: 6 }, (_, i) => makeProject(i));
+  const md = results.map((_, i) => cjkBlock(i)).join('');
+  const out = truncateComment(md, results, { sizeCap: 20_000 });
+  assert.ok(Buffer.byteLength(out, 'utf8') <= 20_000, 'output must fit in byte cap');
+  assert.ok(out.length < md.length, 'must have been truncated');
 });

@@ -226,7 +226,46 @@ test('aggregate: exits 2 on non-numeric --size-cap', async () => {
     await mkdir(results, { recursive: true });
     const { code, stderr } = await runCli(['aggregate', '--size-cap', 'abc', results]);
     assert.equal(code, 2);
-    assert.match(stderr, /--size-cap must be numeric/);
+    assert.match(stderr, /--size-cap must be a positive integer/);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('aggregate: exits 2 on negative --size-cap', async () => {
+  const { dir: tmp, cleanup } = await makeTmpDir();
+  try {
+    const results = path.join(tmp, 'results');
+    await mkdir(results, { recursive: true });
+    const { code, stderr } = await runCli(['aggregate', '--size-cap=-5', results]);
+    assert.equal(code, 2);
+    assert.match(stderr, /--size-cap must be a positive integer/);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('aggregate: exits 2 on zero --size-cap', async () => {
+  const { dir: tmp, cleanup } = await makeTmpDir();
+  try {
+    const results = path.join(tmp, 'results');
+    await mkdir(results, { recursive: true });
+    const { code, stderr } = await runCli(['aggregate', '--size-cap', '0', results]);
+    assert.equal(code, 2);
+    assert.match(stderr, /--size-cap must be a positive integer/);
+  } finally {
+    await cleanup();
+  }
+});
+
+test('aggregate: exits 2 on fractional --file-cap', async () => {
+  const { dir: tmp, cleanup } = await makeTmpDir();
+  try {
+    const results = path.join(tmp, 'results');
+    await mkdir(results, { recursive: true });
+    const { code, stderr } = await runCli(['aggregate', '--file-cap', '1.5', results]);
+    assert.equal(code, 2);
+    assert.match(stderr, /--file-cap must be a positive integer/);
   } finally {
     await cleanup();
   }

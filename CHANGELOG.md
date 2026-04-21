@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.2.0...v5.0.0) (2026-04-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* MessageSummary is now a discriminated union with `kind` ('rule' | 'synthetic') and a shared `id` field (the rule ID for kind='rule', a parenthesized synthetic key otherwise). The previous `ruleId` property is gone. The string 'syntax error' no longer appears in output — parser errors now render as (parser error). Consumers reaching for `.ruleId` on summary rows must narrow on `kind === 'rule'` and read `.id` instead. CSV output shape is unchanged (still errors,warnings,fixable,rule), but the value in the rule column may now be a synthetic key.
+
+### 🩹 Fixes
+
+* harden markdown output and classify non-rule messages ([#24](https://github.com/voxpelli/eslint-formatter-summary/issues/24)) ([56297c6](https://github.com/voxpelli/eslint-formatter-summary/commit/56297c6b07f236a90c61cb81b158ac91c738d973))
+
 ## [4.2.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.1.0...v4.2.0) (2026-04-20)
 
 

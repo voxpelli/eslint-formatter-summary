@@ -3,9 +3,6 @@
   "version": "4.2.0",
   "description": "ESLint summary formatter aggregating results by rule",
   "author": "Pelle Wessman <pelle@kodfabrik.se> (https://kodfabrik.se/)",
-  "contributors": [
-    "Marton Hipszki <mhipszki@gmail.com>"
-  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -30,19 +27,19 @@
     "lib/*/*.js"
   ],
   "scripts": {
+    "check": "run-p check:*",
     "check:installed-check": "installed-check -i @voxpelli/eslint-config",
     "check:knip": "knip",
-    "check:lint": "eslint bin/ lib/ index.cjs",
+    "check:lint": "eslint",
     "check:tsc": "tsc",
     "check:type-coverage": "type-coverage --detail --strict --at-least 99",
-    "check": "run-p check:*",
-    "husky-enable": "husky",
     "husky-disable": "git config --unset core.hooksPath",
-    "test-ci": "run-s test:*",
+    "husky-enable": "husky",
+    "test": "run-s check test:*",
     "test:node": "c8 --reporter=lcov --reporter=text node --test test/*.test.js",
     "test:real-world": "eslint -f ./index.cjs lib/",
-    "test": "run-s check test:*",
-    "try": "eslint -f ./index.cjs"
+    "test-ci": "run-s test:*",
+    "try": "eslint -f ./index.cjs -c ./test-eslint.config.js"
   },
   "keywords": [
     "eslint",

@@ -1,3 +1,6 @@
+/* eslint-disable security/detect-non-literal-fs-filename */
+/* eslint-disable security/detect-non-literal-regexp */
+
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -5,7 +8,7 @@ import test from 'node:test';
 
 import { makeTmpDir, runCli, writeResultArtifact } from './_helpers.js';
 
-const rawFixture = [
+const rawFixture = () => [
   {
     filePath: '/proj/src/a.js',
     errorCount: 2,
@@ -21,12 +24,12 @@ const rawFixture = [
 ];
 
 test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
-    await writeFile(inputFile, JSON.stringify(rawFixture), 'utf8');
-    const { stdout, stderr, code } = await runCli(
-      ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile],
+    await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+    const { code, stderr, stdout } = await runCli(
+      ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile]
     );
     assert.equal(code, 0, `exit code was ${code}; stderr: ${stderr}`);
     assert.equal(stderr, '');
@@ -40,13 +43,13 @@ test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', 
 });
 
 test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
-    await writeFile(inputFile, JSON.stringify(rawFixture), 'utf8');
-    const { stdout, code } = await runCli(
+    await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+    const { code, stdout } = await runCli(
       ['prepare', '--cwd', '/proj', inputFile],
-      { env: { EFS_PROJECT_NAME: 'from/env' } },
+      { env: { EFS_PROJECT_NAME: 'from/env' } }
     );
     assert.equal(code, 0);
     const parsed = JSON.parse(stdout);
@@ -57,13 +60,13 @@ test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async
 });
 
 test('prepare: writes to --out file and emits nothing to stdout', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     const outFile = path.join(tmp, 'out.json');
-    await writeFile(inputFile, JSON.stringify(rawFixture), 'utf8');
-    const { stdout, code } = await runCli(
-      ['prepare', '--project', 'acme/demo', '--cwd', '/proj', '--out', outFile, inputFile],
+    await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+    const { code, stdout } = await runCli(
+      ['prepare', '--project', 'acme/demo', '--cwd', '/proj', '--out', outFile, inputFile]
     );
     assert.equal(code, 0);
     assert.equal(stdout, '');
@@ -77,11 +80,11 @@ test('prepare: writes to --out file and emits nothing to stdout', async () => {
 });
 
 test('prepare: exits 0 with no output when the run has zero findings', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     await writeFile(inputFile, JSON.stringify([{ filePath: '/proj/a.js', errorCount: 0, warningCount: 0, messages: [] }]), 'utf8');
-    const { stdout, code } = await runCli(['prepare', inputFile]);
+    const { code, stdout } = await runCli(['prepare', inputFile]);
     assert.equal(code, 0);
     assert.equal(stdout, '');
   } finally {
@@ -96,9 +99,9 @@ test('prepare: exits 1 with "empty stdin" when no positional and stdin is empty'
 });
 
 test('prepare: reads raw ESLint JSON from stdin when no positional given', async () => {
-  const { stdout, stderr, code } = await runCli(
+  const { code, stderr, stdout } = await runCli(
     ['prepare', '--project', 'acme/demo', '--cwd', '/proj'],
-    { input: JSON.stringify(rawFixture) },
+    { input: JSON.stringify(rawFixture()) }
   );
   assert.equal(code, 0, `exit code was ${code}; stderr: ${stderr}`);
   const parsed = JSON.parse(stdout);
@@ -119,7 +122,7 @@ test('prepare: exits 1 when the input file cannot be read', async () => {
 });
 
 test('prepare: exits 1 on invalid JSON input', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'bad.json');
     await writeFile(inputFile, 'not-json', 'utf8');
@@ -132,11 +135,11 @@ test('prepare: exits 1 on invalid JSON input', async () => {
 });
 
 test('aggregate: emits "all N pass" on empty results directory', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
-    const { stdout, code } = await runCli(['aggregate', '--project-count', '5', results]);
+    const { code, stdout } = await runCli(['aggregate', '--project-count', '5', results]);
     assert.equal(code, 0);
     assert.match(stdout, /All 5 external projects pass/);
   } finally {
@@ -145,16 +148,19 @@ test('aggregate: emits "all N pass" on empty results directory', async () => {
 });
 
 test('aggregate: renders fleet sticky-PR-comment from per-project artifacts', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
       project: 'acme/demo',
-      errorCount: 2, warningCount: 1, fixableErrorCount: 0, fixableWarningCount: 1,
+      errorCount: 2,
+      warningCount: 1,
+      fixableErrorCount: 0,
+      fixableWarningCount: 1,
       syntheticKeys: [],
       rules: { 'no-unused-vars': { errors: 2, warnings: 0, fixable: 0, files: ['src/a.js:10', 'src/a.js:22'] } },
     });
-    const { stdout, code } = await runCli(['aggregate', results]);
+    const { code, stdout } = await runCli(['aggregate', results]);
     assert.equal(code, 0);
     assert.match(stdout, /## External project test results/);
     assert.match(stdout, /acme\/demo/);
@@ -166,18 +172,24 @@ test('aggregate: renders fleet sticky-PR-comment from per-project artifacts', as
 });
 
 test('aggregate: --sort-by severity orders projects by error count desc', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
       project: 'acme/alpha',
-      errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      errorCount: 1,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       syntheticKeys: [],
       rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
     });
     await writeResultArtifact(results, {
       project: 'acme/zeta',
-      errorCount: 5, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      errorCount: 5,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       syntheticKeys: [],
       rules: { foo: { errors: 5, warnings: 0, fixable: 0, files: ['a.js:1'] } },
     });
@@ -195,7 +207,7 @@ test('aggregate: --sort-by severity orders projects by error count desc', async 
 });
 
 test('aggregate: --sort-by with invalid value exits 1 via InputError', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -216,7 +228,7 @@ test('aggregate: exits 1 via InputError when no positional argument is given', a
 });
 
 test('aggregate: warns on stderr when every candidate artifact is skipped', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     // One subdir with a malformed JSON artifact — passes the stat check but
@@ -224,7 +236,7 @@ test('aggregate: warns on stderr when every candidate artifact is skipped', asyn
     const subdir = path.join(results, 'proj-a');
     await mkdir(subdir, { recursive: true });
     await writeFile(path.join(subdir, 'eslint-result.json'), 'not-json', 'utf8');
-    const { stdout, stderr, code } = await runCli(['aggregate', results]);
+    const { code, stderr, stdout } = await runCli(['aggregate', results]);
     assert.equal(code, 0);
     assert.match(stdout, /All \? external projects pass/);
     assert.match(stderr, /all 1 candidate artifact\(s\) in .+ were skipped/);
@@ -240,7 +252,7 @@ test('aggregate: exits 1 when results directory is missing (no silent all-pass)'
 });
 
 test('aggregate: exits 1 via InputError on non-numeric --size-cap', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -253,7 +265,7 @@ test('aggregate: exits 1 via InputError on non-numeric --size-cap', async () => 
 });
 
 test('aggregate: exits 1 via InputError on negative --size-cap', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -266,7 +278,7 @@ test('aggregate: exits 1 via InputError on negative --size-cap', async () => {
 });
 
 test('aggregate: exits 1 via InputError on zero --size-cap', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -279,7 +291,7 @@ test('aggregate: exits 1 via InputError on zero --size-cap', async () => {
 });
 
 test('aggregate: exits 1 via InputError on fractional --file-cap', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await mkdir(results, { recursive: true });
@@ -292,20 +304,23 @@ test('aggregate: exits 1 via InputError on fractional --file-cap', async () => {
 });
 
 test('aggregate: --size-cap triggers truncation end-to-end with tail-summary block', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     // Five projects; cap is small enough that some will overflow to tail.
     for (let i = 0; i < 5; i++) {
       await writeResultArtifact(results, {
         project: `acme/proj-${i}`,
-        errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
         syntheticKeys: [],
         // Pad each rule's files list to make blocks large
         rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: Array.from({ length: 200 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
       });
     }
-    const { stdout, code } = await runCli(['aggregate', '--size-cap', '20000', '--file-cap', '200', results]);
+    const { code, stdout } = await runCli(['aggregate', '--size-cap', '20000', '--file-cap', '200', results]);
     assert.equal(code, 0);
     assert.match(stdout, /<summary>Tail projects \(\d+ truncated/, 'tail-summary block should appear when truncation fires');
     assert.match(stdout, /file:line detail truncated for tail projects/, 'trailer sentence should appear');
@@ -315,45 +330,49 @@ test('aggregate: --size-cap triggers truncation end-to-end with tail-summary blo
 });
 
 test('aggregate: $GITHUB_STEP_SUMMARY env var has no effect (callers redirect --full explicitly)', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     await writeResultArtifact(results, {
       project: 'acme/demo',
-      errorCount: 2, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      errorCount: 2,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       syntheticKeys: [],
       rules: { foo: { errors: 2, warnings: 0, fixable: 0, files: ['a.js:1', 'a.js:2'] } },
     });
     const stepSummary = path.join(tmp, 'step-summary.md');
-    const { stdout, code } = await runCli(['aggregate', results], {
+    const { code, stdout } = await runCli(['aggregate', results], {
       env: { GITHUB_STEP_SUMMARY: stepSummary },
     });
     assert.equal(code, 0);
     assert.match(stdout, /acme\/demo/);
-    const { readFile, stat } = await import('node:fs/promises');
+    const { stat } = await import('node:fs/promises');
     let exists = false;
     try { await stat(stepSummary); exists = true; } catch { /* expected */ }
     assert.equal(exists, false, 'aggregate must not auto-write to $GITHUB_STEP_SUMMARY');
-    // readFile import kept to match prior style in sibling test; no-op here
-    void readFile;
   } finally {
     await cleanup();
   }
 });
 
 test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     for (let i = 0; i < 5; i++) {
       await writeResultArtifact(results, {
         project: `acme/proj-${i}`,
-        errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+        errorCount: 1,
+        warningCount: 0,
+        fixableErrorCount: 0,
+        fixableWarningCount: 0,
         syntheticKeys: [],
         rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: Array.from({ length: 200 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
       });
     }
-    const { stdout, code } = await runCli(['aggregate', '--full', '--size-cap', '20000', '--file-cap', '200', results]);
+    const { code, stdout } = await runCli(['aggregate', '--full', '--size-cap', '20000', '--file-cap', '200', results]);
     assert.equal(code, 0);
     assert.doesNotMatch(stdout, /<summary>Tail projects/);
     assert.doesNotMatch(stdout, /file:line detail truncated/);
@@ -365,7 +384,7 @@ test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', asyn
 });
 
 test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const results = path.join(tmp, 'results');
     const ghToken = 'ghp_' + 'A'.repeat(40);
@@ -373,14 +392,17 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
     const awsKey = 'AKIAIOSFODNN7EXAMPLE';
     await writeResultArtifact(results, {
       project: 'acme/demo',
-      errorCount: 3, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      errorCount: 3,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       syntheticKeys: [],
       rules: {
         [`rule-${ghToken}`]: { errors: 1, warnings: 0, fixable: 0, files: [`src/${npmToken}.js:1`] },
         [`rule-${awsKey}`]: { errors: 2, warnings: 0, fixable: 0, files: ['src/b.js:1'] },
       },
     });
-    const { stdout, code } = await runCli(['aggregate', results]);
+    const { code, stdout } = await runCli(['aggregate', results]);
     assert.equal(code, 0);
     assert.doesNotMatch(stdout, new RegExp(ghToken));
     assert.doesNotMatch(stdout, new RegExp(npmToken));
@@ -392,17 +414,20 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
 });
 
 test('prepare: stderr warns when filePaths escape --cwd', async () => {
-  const { dir: tmp, cleanup } = await makeTmpDir();
+  const { cleanup, dir: tmp } = await makeTmpDir();
   try {
     const inputFile = path.join(tmp, 'raw.json');
     // filePath is under /elsewhere/... but cwd is /repo; path.relative produces ../
     await writeFile(inputFile, JSON.stringify([{
       filePath: '/elsewhere/src/a.js',
-      errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0,
+      errorCount: 1,
+      warningCount: 0,
+      fixableErrorCount: 0,
+      fixableWarningCount: 0,
       messages: [{ ruleId: 'no-undef', severity: 2, line: 1, message: 'x' }],
     }]), 'utf8');
     const { code, stderr } = await runCli(
-      ['prepare', '--project', 'acme/demo', '--cwd', '/repo', inputFile],
+      ['prepare', '--project', 'acme/demo', '--cwd', '/repo', inputFile]
     );
     assert.equal(code, 0);
     assert.match(stderr, /filePath outside --cwd/);

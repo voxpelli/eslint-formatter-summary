@@ -32,11 +32,12 @@ test('scrubs AWS access key IDs', () => {
 test('scrubs PEM block headers', () => {
   assert.equal(
     sanitize('leaked: -----BEGIN RSA PRIVATE KEY-----'),
-    'leaked: [REDACTED]',
+    'leaked: [REDACTED]'
   );
 });
 
 test('strips control characters (bidi / zero-width)', () => {
+  // eslint-disable-next-line security/detect-bidi-characters -- testing that bidi chars are stripped
   assert.equal(sanitize('a‮b'), 'ab');
 });
 

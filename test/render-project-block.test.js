@@ -5,7 +5,10 @@ import renderProjectBlock from '../lib/cli/render-project-block.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 
-/** @returns {ProjectResult} */
+/**
+ * @param {Record<string, unknown>} overrides
+ * @returns {ProjectResult}
+ */
 const make = (overrides = {}) => ({
   project: 'owner/repo',
   errorCount: 0,

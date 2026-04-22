@@ -17,7 +17,7 @@ test('rejects null', () => {
 });
 
 test('rejects undefined', () => {
-  assert.equal(isValidProjectResult(undefined), false);
+  assert.equal(isValidProjectResult(), false);
 });
 
 test('rejects array at top level', () => {

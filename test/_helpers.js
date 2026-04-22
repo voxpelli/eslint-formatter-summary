@@ -1,8 +1,13 @@
+/* eslint-disable n/no-process-env */
+/* eslint-disable security/detect-non-literal-fs-filename */
+
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  mkdir, mkdtemp, rm, writeFile,
+} from 'node:fs/promises';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 
@@ -17,7 +22,7 @@ const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.ur
  * @param {{ cwd?: string, input?: string, env?: Record<string, string> }} [options]
  * @returns {Promise<{ stdout: string, stderr: string, code: number }>}
  */
-export const runCli = (argv, { cwd, input, env } = {}) => new Promise((resolve, reject) => {
+export const runCli = (argv, { cwd, env, input } = {}) => new Promise((resolve, reject) => {
   const child = spawn(process.execPath, [binPath, ...argv], {
     cwd,
     env: { ...process.env, ...env },
@@ -43,7 +48,7 @@ export const runCli = (argv, { cwd, input, env } = {}) => new Promise((resolve, 
  * @param {ProjectResult} p
  */
 export const writeResultArtifact = async (dir, p) => {
-  const sub = path.join(dir, p.project.replace(/\//g, '-'));
+  const sub = path.join(dir, p.project.replaceAll('/', '-'));
   await mkdir(sub, { recursive: true });
   await writeFile(path.join(sub, 'eslint-result.json'), JSON.stringify(p), 'utf8');
 };

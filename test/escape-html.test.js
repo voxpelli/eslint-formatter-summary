@@ -12,7 +12,7 @@ test('escapeHtml escapes & before other entities (no double-escape)', () => {
 });
 
 test('escapeHtml escapes double and single quotes', () => {
-  assert.equal(escapeHtml(`"it's"`), '&quot;it&#39;s&quot;');
+  assert.equal(escapeHtml('"it\'s"'), '&quot;it&#39;s&quot;');
 });
 
 test('escapeHtml breaks up </details> so it cannot close an outer details tag', () => {

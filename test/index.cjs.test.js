@@ -1,9 +1,15 @@
+/* eslint-disable n/no-process-env */
+/* eslint-disable n/no-sync */
+/* eslint-disable security/detect-non-literal-fs-filename */
+
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import test from 'node:test';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import test from 'node:test';
+import {
+  existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync,
+} from 'node:fs';
 
 /** @import { ESLint } from 'eslint' */
 
@@ -52,8 +58,8 @@ test('index.cjs honors EFS_OUTPUT=csv', async () => {
 });
 
 test('index.cjs appends markdown to $GITHUB_STEP_SUMMARY when set', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-  const summaryPath = join(dir, 'step.md');
+  const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+  const summaryPath = path.join(dir, 'step.md');
   const prev = process.env['GITHUB_STEP_SUMMARY'];
   process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
   try {
@@ -69,8 +75,8 @@ test('index.cjs appends markdown to $GITHUB_STEP_SUMMARY when set', async () => 
 });
 
 test('index.cjs appends (not overwrites) on repeated invocations', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-  const summaryPath = join(dir, 'step.md');
+  const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+  const summaryPath = path.join(dir, 'step.md');
   const prev = process.env['GITHUB_STEP_SUMMARY'];
   process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
   try {
@@ -87,8 +93,8 @@ test('index.cjs appends (not overwrites) on repeated invocations', async () => {
 });
 
 test('index.cjs does not write $GITHUB_STEP_SUMMARY on a clean run', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-  const summaryPath = join(dir, 'step.md');
+  const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+  const summaryPath = path.join(dir, 'step.md');
   const prev = process.env['GITHUB_STEP_SUMMARY'];
   process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
   try {
@@ -103,8 +109,8 @@ test('index.cjs does not write $GITHUB_STEP_SUMMARY on a clean run', async () =>
 
 for (const optInValue of ['true', '1', 'yes']) {
   test(`index.cjs skips write when EFS_SKIP_GH_SUMMARY=${optInValue}`, async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-    const summaryPath = join(dir, 'step.md');
+    const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+    const summaryPath = path.join(dir, 'step.md');
     const prevSummary = process.env['GITHUB_STEP_SUMMARY'];
     const prevSkip = process.env['EFS_SKIP_GH_SUMMARY'];
     process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
@@ -125,7 +131,8 @@ for (const optInValue of ['true', '1', 'yes']) {
 test('index.cjs: EFS_CAP unset leaves markdown uncapped (file list intact)', async () => {
   const files = Array.from({ length: 120 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
-    errorCount: 1, warningCount: 0,
+    errorCount: 1,
+    warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prev = process.env['EFS_OUTPUT'];
@@ -143,7 +150,8 @@ test('index.cjs: EFS_CAP unset leaves markdown uncapped (file list intact)', asy
 test('index.cjs: EFS_CAP=true applies default file cap (50)', async () => {
   const files = Array.from({ length: 120 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
-    errorCount: 1, warningCount: 0,
+    errorCount: 1,
+    warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
@@ -165,7 +173,8 @@ test('index.cjs: EFS_CAP=true applies default file cap (50)', async () => {
 test('index.cjs: EFS_FILE_CAP overrides the default when caps are on', async () => {
   const files = Array.from({ length: 20 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
-    errorCount: 1, warningCount: 0,
+    errorCount: 1,
+    warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
@@ -191,11 +200,12 @@ test('index.cjs: EFS_FILE_CAP overrides the default when caps are on', async () 
 test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps cap the return value', async () => {
   const files = Array.from({ length: 120 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
-    errorCount: 1, warningCount: 0,
+    errorCount: 1,
+    warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
-  const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-  const summaryPath = join(dir, 'step.md');
+  const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+  const summaryPath = path.join(dir, 'step.md');
   const prevOutput = process.env['EFS_OUTPUT'];
   const prevCap = process.env['EFS_CAP'];
   const prevSummary = process.env['GITHUB_STEP_SUMMARY'];
@@ -222,7 +232,8 @@ test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps 
 test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async () => {
   const files = Array.from({ length: 60 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
-    errorCount: 1, warningCount: 0,
+    errorCount: 1,
+    warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
@@ -252,11 +263,11 @@ test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async ()
 });
 
 test('index.cjs still returns output when $GITHUB_STEP_SUMMARY write fails', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'efs-'));
-  const blocker = join(dir, 'blocker');
+  const dir = mkdtempSync(path.join(tmpdir(), 'efs-'));
+  const blocker = path.join(dir, 'blocker');
   writeFileSync(blocker, 'x', 'utf8');
   // Append to a path that treats `blocker` as a directory — ENOTDIR.
-  const summaryPath = join(blocker, 'step.md');
+  const summaryPath = path.join(blocker, 'step.md');
   const prev = process.env['GITHUB_STEP_SUMMARY'];
   process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
   try {

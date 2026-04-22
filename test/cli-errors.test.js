@@ -44,62 +44,62 @@ test('parseNumericFlag: parses valid positive integer', () => {
 test('parseNumericFlag: throws InputError for non-numeric', () => {
   assert.throws(
     () => parseNumericFlag('abc', '--size-cap'),
-    (err) => err instanceof InputError && /--size-cap must be a positive integer/.test(err.message),
+    (err) => err instanceof InputError && /--size-cap must be a positive integer/.test(err.message)
   );
 });
 
 test('parseNumericFlag: throws InputError for zero', () => {
   assert.throws(
     () => parseNumericFlag('0', '--size-cap'),
-    InputError,
+    InputError
   );
 });
 
 test('parseNumericFlag: throws InputError for negative', () => {
   assert.throws(
     () => parseNumericFlag('-5', '--size-cap'),
-    InputError,
+    InputError
   );
 });
 
 test('parseNumericFlag: throws InputError for fractional', () => {
   assert.throws(
     () => parseNumericFlag('1.5', '--file-cap'),
-    InputError,
+    InputError
   );
 });
 
 test('cmd-aggregate run: rejects with InputError when no positional given', async () => {
   await assert.rejects(
     cmdAggregate.run([], import.meta, { parentName }),
-    (err) => err instanceof InputError && /expected exactly one <results-dir>/.test(err.message),
+    (err) => err instanceof InputError && /expected exactly one <results-dir>/.test(err.message)
   );
 });
 
 test('cmd-aggregate run: rejects with InputError on invalid --sort-by', async () => {
   await assert.rejects(
     cmdAggregate.run(['--sort-by', 'bogus', '/tmp/nope'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /--sort-by must be "project" or "severity"/.test(err.message),
+    (err) => err instanceof InputError && /--sort-by must be "project" or "severity"/.test(err.message)
   );
 });
 
 test('cmd-aggregate run: rejects with InputError when results dir is missing', async () => {
   await assert.rejects(
     cmdAggregate.run(['/definitely/does/not/exist/anywhere'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /results directory not found/.test(err.message),
+    (err) => err instanceof InputError && /results directory not found/.test(err.message)
   );
 });
 
 test('cmd-prepare run: rejects with InputError when given multiple positionals', async () => {
   await assert.rejects(
     cmdPrepare.run(['a.json', 'b.json'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /expected stdin or a single/.test(err.message),
+    (err) => err instanceof InputError && /expected stdin or a single/.test(err.message)
   );
 });
 
 test('cmd-prepare run: rejects with InputError when input file cannot be read', async () => {
   await assert.rejects(
     cmdPrepare.run(['/definitely/does/not/exist.json'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /could not read/.test(err.message),
+    (err) => err instanceof InputError && /could not read/.test(err.message)
   );
 });

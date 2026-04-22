@@ -6,7 +6,7 @@ import prepareProjectResult from '../lib/cli/prepare-project-result.js';
 const baseDir = '/repo';
 
 test('prepareProjectResult returns undefined when input is not an array', () => {
-  assert.equal(prepareProjectResult(null, { baseDir }), undefined);
+  assert.equal(prepareProjectResult(undefined, { baseDir }), undefined);
   assert.equal(prepareProjectResult({}, { baseDir }), undefined);
   assert.equal(prepareProjectResult('string', { baseDir }), undefined);
 });
@@ -60,7 +60,7 @@ test('prepareProjectResult buckets parser errors into (parser error) with line e
     fixableErrorCount: 0,
     fixableWarningCount: 0,
     messages: [
-      { ruleId: null, severity: 2, fatal: true, line: 1, message: 'Parsing error: Unexpected token' },
+      { ruleId: undefined, severity: 2, fatal: true, line: 1, message: 'Parsing error: Unexpected token' },
     ],
   }];
   const result = prepareProjectResult(raw, { baseDir });
@@ -77,7 +77,7 @@ test('prepareProjectResult captures detail via \\t separator for unused-disable'
     fixableErrorCount: 0,
     fixableWarningCount: 0,
     messages: [
-      { ruleId: null, severity: 1, line: 3, message: "Unused eslint-disable directive (no problems were reported from 'no-console')." },
+      { ruleId: undefined, severity: 1, line: 3, message: "Unused eslint-disable directive (no problems were reported from 'no-console')." },
     ],
   }];
   const result = prepareProjectResult(raw, { baseDir });

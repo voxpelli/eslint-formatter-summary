@@ -5,7 +5,10 @@ import renderComment, { renderAllPass } from '../lib/cli/render-comment.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 
-/** @returns {ProjectResult} */
+/**
+ * @param {Record<string, unknown>} overrides
+ * @returns {ProjectResult}
+ */
 const make = (overrides = {}) => ({
   project: 'owner/repo',
   errorCount: 0,
@@ -24,7 +27,7 @@ test('renderAllPass renders the "all N pass" body with the given count', () => {
 });
 
 test('renderAllPass falls back to "?" when count is undefined', () => {
-  assert.match(renderAllPass(undefined), /All \? external projects pass/);
+  assert.match(renderAllPass(), /All \? external projects pass/);
 });
 
 test('renderAllPass falls back to "?" when count is zero or negative', () => {
@@ -38,12 +41,18 @@ test('renderComment sums errors, warnings, and fixable across projects', () => {
   const out = renderComment([
     make({
       project: 'owner/a',
-      errorCount: 2, warningCount: 4, fixableErrorCount: 1, fixableWarningCount: 0,
+      errorCount: 2,
+      warningCount: 4,
+      fixableErrorCount: 1,
+      fixableWarningCount: 0,
       rules: { r1: { errors: 2, warnings: 4, fixable: 1, files: ['a.js:1'] } },
     }),
     make({
       project: 'owner/b',
-      errorCount: 3, warningCount: 7, fixableErrorCount: 0, fixableWarningCount: 3,
+      errorCount: 3,
+      warningCount: 7,
+      fixableErrorCount: 0,
+      fixableWarningCount: 3,
       rules: { r2: { errors: 3, warnings: 7, fixable: 3, files: ['b.js:1'] } },
     }),
   ]);
@@ -54,7 +63,8 @@ test('renderComment omits error/warning clauses when counts are zero', () => {
   const out = renderComment([
     make({
       project: 'owner/a',
-      warningCount: 2, fixableWarningCount: 1,
+      warningCount: 2,
+      fixableWarningCount: 1,
       rules: { r1: { errors: 0, warnings: 2, fixable: 1, files: ['a.js:1'] } },
     }),
   ]);

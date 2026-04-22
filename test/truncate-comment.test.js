@@ -5,7 +5,10 @@ import truncateComment from '../lib/cli/truncate-comment.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 
-/** @returns {ProjectResult} */
+/**
+ * @param {number} i
+ * @returns {ProjectResult}
+ */
 const makeProject = (i) => ({
   project: `owner/proj-${i}`,
   errorCount: 1,
@@ -98,12 +101,13 @@ test('truncateComment falls back to a short note when tail summary itself exceed
   assert.ok(!out.includes('<summary>Tail projects'));
 });
 
+const cjkBlock = (i) =>
+  `<details>\n<summary>owner/proj-${i}</summary>\n\n` +
+  '中'.repeat(1500) + '\n</details>\n\n';
+
 test('truncateComment output stays within the byte cap even with multi-byte content', () => {
   // Each '中' is 3 UTF-8 bytes. A code-unit slice at N chars would re-encode
   // to up to ~3N bytes, blowing the cap. Byte-safe slice must hold the line.
-  const cjkBlock = (i) =>
-    `<details>\n<summary>owner/proj-${i}</summary>\n\n` +
-    '中'.repeat(1500) + '\n</details>\n\n';
   const results = Array.from({ length: 6 }, (_, i) => makeProject(i));
   const md = results.map((_, i) => cjkBlock(i)).join('');
   const out = truncateComment(md, results, { sizeCap: 20_000 });

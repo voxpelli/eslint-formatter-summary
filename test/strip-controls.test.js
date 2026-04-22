@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import stripControls from '../lib/strip-controls.js';
+import { stripControls } from '../lib/utils/text.js';
 
 test('stripControls removes zero-width space (U+200B)', () => {
   assert.equal(stripControls('a​b'), 'ab');

@@ -30,9 +30,9 @@ test('format() csv has header and one row per rule', () => {
   const lines = out.split('\n');
   assert.equal(lines[0], 'errors,warnings,fixable,rule');
   assert.equal(lines.length, 4);
-  assert.ok(lines.some(l => l === '2,0,0,"no-unused-vars"'), `missing no-unused-vars row; got:\n${out}`);
-  assert.ok(lines.some(l => l === '2,0,0,"no-undef"'));
-  assert.ok(lines.some(l => l === '0,2,2,"semi"'));
+  assert.ok(lines.includes('2,0,0,"no-unused-vars"'), `missing no-unused-vars row; got:\n${out}`);
+  assert.ok(lines.includes('2,0,0,"no-undef"'));
+  assert.ok(lines.includes('0,2,2,"semi"'));
 });
 
 test('format() csv: malformed rule ids are bucketed into (invalid rule id)', () => {
@@ -135,7 +135,7 @@ test('format() markdown: parser errors surface as (parser error) row with footno
   /** @type {ESLint.LintResult[]} */
   const fatal = /** @type {any} */ ([{
     filePath: '/p/broken.js',
-    messages: [{ ruleId: null, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error: Unexpected token' }],
+    messages: [{ ruleId: undefined, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error: Unexpected token' }],
   }]);
   const out = format(fatal, { cwd: '/p', output: 'markdown' });
   assert.match(out, /\(parser error\)/);
@@ -147,7 +147,7 @@ test('format() markdown: unused-disable classified with detail rendered per file
   /** @type {ESLint.LintResult[]} */
   const unused = /** @type {any} */ ([{
     filePath: '/p/a.js',
-    messages: [{ ruleId: null, severity: 1, line: 1, column: 1, message: "Unused eslint-disable directive (no problems were reported from 'no-console')." }],
+    messages: [{ ruleId: undefined, severity: 1, line: 1, column: 1, message: "Unused eslint-disable directive (no problems were reported from 'no-console')." }],
   }]);
   const out = format(unused, { cwd: '/p', output: 'markdown' });
   assert.match(out, /\(unused disable\)/);
@@ -175,7 +175,7 @@ test('format() csv: synthetic keys render with quotes (structurally safe for CSV
   /** @type {ESLint.LintResult[]} */
   const fatal = /** @type {any} */ ([{
     filePath: '/p/a.js',
-    messages: [{ ruleId: null, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error' }],
+    messages: [{ ruleId: undefined, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error' }],
   }]);
   const out = format(fatal, { cwd: '/p', output: 'csv' });
   assert.match(out, /1,0,0,"\(parser error\)"/);
@@ -186,7 +186,7 @@ test('format() sortReverse inverts order', () => {
   const reversed = format(fixture, { cwd: '/proj', output: 'csv', sortReverse: true });
   const forwardRows = forward.split('\n').slice(1);
   const reversedRows = reversed.split('\n').slice(1);
-  assert.deepEqual([...forwardRows].reverse(), reversedRows);
+  assert.deepEqual([...forwardRows].toReversed(), reversedRows);
 });
 
 test('format() markdown: scrubs secret-shaped tokens in rule ids and file paths', () => {

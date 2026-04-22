@@ -54,6 +54,6 @@ test('renderFootnote uses the shared synthetic-footnote-text module', () => {
   const out = renderFootnote([{ ...base, syntheticKeys: ['(parser error)'] }]);
   assert.ok(
     out.includes(SYNTHETIC_FOOTNOTE_TEXT['(parser error)']),
-    'CLI footnote must render the canonical shared prose for (parser error)',
+    'CLI footnote must render the canonical shared prose for (parser error)'
   );
 });

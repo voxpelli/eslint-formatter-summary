@@ -20,7 +20,7 @@
     "eslint-summary": "./bin/eslint-summary.js"
   },
   "engines": {
-    "node": "^20.19.0 || ^22.13.0 || >=24.0.0",
+    "node": "^22.13.0 || >=24.0.0",
     "typescript": ">=5.9"
   },
   "files": [

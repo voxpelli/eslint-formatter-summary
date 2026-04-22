@@ -68,3 +68,14 @@ test('renderFileSpan escapes HTML in path', () => {
   assert.ok(!out.includes('<x.js'), 'raw <x.js leaked');
   assert.ok(out.includes('&lt;x.js'));
 });
+
+test('renderFileSpan preserves :line suffix when path triggers length cap', () => {
+  // Path just over the 500-char internal cap — without headroom reservation
+  // the `:42` suffix would be lost to the `…` trailer and the anchor would
+  // silently demote to an unlinked `<code>` span.
+  const longPath = 'src/' + 'a'.repeat(520) + '.js';
+  const out = renderFileSpan(`${longPath}:42`, 'owner/repo');
+  assert.match(out, /href="https:\/\/github\.com\/owner\/repo\/blob\/HEAD\/.+#L42"/);
+  assert.ok(out.includes(':42</code>'), 'line suffix must survive truncation');
+  assert.ok(out.includes('…'), 'truncation ellipsis should appear inside the path');
+});

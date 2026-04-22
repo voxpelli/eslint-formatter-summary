@@ -215,6 +215,24 @@ test('aggregate: exits 1 via InputError when no positional argument is given', a
   assert.match(stderr, /Invalid input:/);
 });
 
+test('aggregate: warns on stderr when every candidate artifact is skipped', async () => {
+  const { dir: tmp, cleanup } = await makeTmpDir();
+  try {
+    const results = path.join(tmp, 'results');
+    // One subdir with a malformed JSON artifact — passes the stat check but
+    // fails JSON.parse, so readResultsDirectory returns zero valid results.
+    const subdir = path.join(results, 'proj-a');
+    await mkdir(subdir, { recursive: true });
+    await writeFile(path.join(subdir, 'eslint-result.json'), 'not-json', 'utf8');
+    const { stdout, stderr, code } = await runCli(['aggregate', results]);
+    assert.equal(code, 0);
+    assert.match(stdout, /All \? external projects pass/);
+    assert.match(stderr, /all 1 candidate artifact\(s\) in .+ were skipped/);
+  } finally {
+    await cleanup();
+  }
+});
+
 test('aggregate: exits 1 when results directory is missing (no silent all-pass)', async () => {
   const { code, stderr } = await runCli(['aggregate', '/definitely/does/not/exist']);
   assert.equal(code, 1);

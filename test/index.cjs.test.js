@@ -5,11 +5,13 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { createRequire } from 'node:module';
 
+/** @import { ESLint } from 'eslint' */
+
 const require = createRequire(import.meta.url);
-/** @type {(results: import('eslint').ESLint.LintResult[], ctx: import('eslint').ESLint.LintResultData) => Promise<string>} */
+/** @type {(results: ESLint.LintResult[], ctx: ESLint.LintResultData) => Promise<string>} */
 const formatter = require('../index.cjs');
 
-/** @type {import('eslint').ESLint.LintResult[]} */
+/** @type {ESLint.LintResult[]} */
 const fixture = /** @type {any} */ ([{
   filePath: '/proj/src/a.js',
   errorCount: 1,
@@ -20,7 +22,7 @@ const fixture = /** @type {any} */ ([{
   ],
 }]);
 
-/** @type {import('eslint').ESLint.LintResult[]} */
+/** @type {ESLint.LintResult[]} */
 const cleanFixture = /** @type {any} */ ([{
   filePath: '/proj/src/clean.js',
   errorCount: 0,
@@ -28,7 +30,7 @@ const cleanFixture = /** @type {any} */ ([{
   messages: [],
 }]);
 
-/** @type {import('eslint').ESLint.LintResultData} */
+/** @type {ESLint.LintResultData} */
 const context = { cwd: '/proj', rulesMeta: {} };
 
 test('index.cjs returns CLI-formatted string by default', async () => {

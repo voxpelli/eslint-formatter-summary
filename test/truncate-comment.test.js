@@ -3,7 +3,9 @@ import test from 'node:test';
 
 import truncateComment from '../lib/cli/truncate-comment.js';
 
-/** @returns {import('../lib/cli/prepare-project-result.js').ProjectResult} */
+/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+
+/** @returns {ProjectResult} */
 const makeProject = (i) => ({
   project: `owner/proj-${i}`,
   errorCount: 1,

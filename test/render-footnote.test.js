@@ -4,7 +4,9 @@ import test from 'node:test';
 import renderFootnote from '../lib/cli/render-footnote.js';
 import { SYNTHETIC_FOOTNOTE_TEXT } from '../lib/synthetic-footnote-text.js';
 
-/** @type {import('../lib/cli/prepare-project-result.js').ProjectResult} */
+/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+
+/** @type {ProjectResult} */
 const base = {
   project: 'owner/repo',
   errorCount: 0,

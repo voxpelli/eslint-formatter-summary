@@ -3,7 +3,9 @@ import test from 'node:test';
 
 import { format } from '../lib/format-results.js';
 
-/** @type {import('eslint').ESLint.LintResult[]} */
+/** @import { ESLint } from 'eslint' */
+
+/** @type {ESLint.LintResult[]} */
 const fixture = /** @type {any} */ ([
   {
     filePath: '/proj/src/a.js',
@@ -34,7 +36,7 @@ test('format() csv has header and one row per rule', () => {
 });
 
 test('format() csv: malformed rule ids are bucketed into (invalid rule id)', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const quoted = /** @type {any} */ ([{
     filePath: '/p/a.js',
     messages: [{ ruleId: 'weird"rule', severity: 2, line: 1, column: 1, message: 'x' }],
@@ -85,7 +87,7 @@ test('format() default CLI output contains header, rule rows, and totals', () =>
 });
 
 test('format() markdown escapes </details> inside file paths so nesting cannot break', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const injected = /** @type {any} */ ([{
     filePath: '/proj/src/weird</details><script>alert(1)</script>.js',
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
@@ -109,7 +111,7 @@ test('format() markdown drops non-http docs URLs (javascript: scheme is stripped
 });
 
 test('format() markdown: shape-failing rule ids never reach the rendered row', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const injected = /** @type {any} */ ([{
     filePath: '/p/a.js',
     messages: [{ ruleId: 'my-plugin/<script>', severity: 2, line: 1, column: 1, message: 'x' }],
@@ -130,7 +132,7 @@ test('format() markdown keeps https URLs (positive control for allowlist)', () =
 });
 
 test('format() markdown: parser errors surface as (parser error) row with footnote', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const fatal = /** @type {any} */ ([{
     filePath: '/p/broken.js',
     messages: [{ ruleId: null, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error: Unexpected token' }],
@@ -142,7 +144,7 @@ test('format() markdown: parser errors surface as (parser error) row with footno
 });
 
 test('format() markdown: unused-disable classified with detail rendered per file', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const unused = /** @type {any} */ ([{
     filePath: '/p/a.js',
     messages: [{ ruleId: null, severity: 1, line: 1, column: 1, message: "Unused eslint-disable directive (no problems were reported from 'no-console')." }],
@@ -153,7 +155,7 @@ test('format() markdown: unused-disable classified with detail rendered per file
 });
 
 test('format() markdown: missing-rule classified and detail captured', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const missing = /** @type {any} */ ([{
     filePath: '/p/a.js',
     messages: [{ ruleId: 'no-undef-plugin/missing', severity: 2, line: 1, column: 1, message: "Definition for rule 'no-undef-plugin/missing' was not found." }],
@@ -170,7 +172,7 @@ test('format() markdown: footnote is omitted when there are no synthetic rows', 
 });
 
 test('format() csv: synthetic keys render with quotes (structurally safe for CSV)', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const fatal = /** @type {any} */ ([{
     filePath: '/p/a.js',
     messages: [{ ruleId: null, severity: 2, fatal: true, line: 1, column: 1, message: 'Parsing error' }],
@@ -190,7 +192,7 @@ test('format() sortReverse inverts order', () => {
 test('format() markdown: scrubs secret-shaped tokens in rule ids and file paths', () => {
   const token = 'ghp_' + 'A'.repeat(40);
   const fileToken = 'npm_' + 'B'.repeat(40);
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const fx = /** @type {any} */ ([{
     filePath: `/proj/src/${fileToken}.js`,
     messages: [{ ruleId: `rule-${token}`, severity: 2, line: 1, column: 1, message: 'x' }],
@@ -202,7 +204,7 @@ test('format() markdown: scrubs secret-shaped tokens in rule ids and file paths'
 });
 
 test('format() markdown: cap.fileCap caps per-rule file list with overflow trailer', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const many = /** @type {any} */ (
     Array.from({ length: 20 }, (_, i) => ({
       filePath: `/proj/src/f${i}.js`,
@@ -215,7 +217,7 @@ test('format() markdown: cap.fileCap caps per-rule file list with overflow trail
 });
 
 test('format() markdown: cap.sizeCap truncates output and appends trailer', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const many = /** @type {any} */ (
     Array.from({ length: 60 }, (_, i) => ({
       filePath: `/proj/src/${'padding-path-'.repeat(10)}${i}.js`,
@@ -230,7 +232,7 @@ test('format() markdown: cap.sizeCap truncates output and appends trailer', () =
 });
 
 test('format() csv: cap is ignored (machine output never truncated)', () => {
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const many = /** @type {any} */ (
     Array.from({ length: 100 }, (_, i) => ({
       filePath: `/p/f${i}.js`,
@@ -244,7 +246,7 @@ test('format() csv: cap is ignored (machine output never truncated)', () => {
 
 test('format() csv: secret-shaped rule ids pass through untouched (machine-consumed)', () => {
   const token = 'ghp_' + 'A'.repeat(40);
-  /** @type {import('eslint').ESLint.LintResult[]} */
+  /** @type {ESLint.LintResult[]} */
   const fx = /** @type {any} */ ([{
     filePath: '/proj/src/a.js',
     messages: [{ ruleId: `rule-${token}`, severity: 2, line: 1, column: 1, message: 'x' }],

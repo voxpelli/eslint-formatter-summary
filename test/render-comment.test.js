@@ -3,7 +3,9 @@ import test from 'node:test';
 
 import renderComment, { renderAllPass } from '../lib/cli/render-comment.js';
 
-/** @returns {import('../lib/cli/prepare-project-result.js').ProjectResult} */
+/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+
+/** @returns {ProjectResult} */
 const make = (overrides = {}) => ({
   project: 'owner/repo',
   errorCount: 0,

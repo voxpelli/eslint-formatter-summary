@@ -8,7 +8,9 @@ import cmdAggregate from '../lib/cli/cmd-aggregate.js';
 import cmdPrepare from '../lib/cli/cmd-prepare.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
-/** @type {import('peowly-commands').CliCommands} */
+/** @import { CliCommands } from 'peowly-commands' */
+
+/** @type {CliCommands} */
 const commands = {
   prepare: cmdPrepare,
   aggregate: cmdAggregate,

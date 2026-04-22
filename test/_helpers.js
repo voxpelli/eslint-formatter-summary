@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+
 const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.url));
 
 /**
@@ -38,7 +40,7 @@ export const runCli = (argv, { cwd, input, env } = {}) => new Promise((resolve, 
  * mirroring the layout that `eslint-summary aggregate` expects.
  *
  * @param {string} dir
- * @param {import('../lib/cli/prepare-project-result.js').ProjectResult} p
+ * @param {ProjectResult} p
  */
 export const writeResultArtifact = async (dir, p) => {
   const sub = path.join(dir, p.project.replace(/\//g, '-'));

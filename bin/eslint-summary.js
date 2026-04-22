@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
+import chalk from 'chalk';
 import { PeowlyCommandMissingError, peowlyCommands } from 'peowly-commands';
 
 import cmdAggregate from '../lib/cli/cmd-aggregate.js';
 import cmdPrepare from '../lib/cli/cmd-prepare.js';
+import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
 /** @type {import('peowly-commands').CliCommands} */
 const commands = {
@@ -19,8 +21,44 @@ try {
   });
 } catch (err) {
   if (err instanceof PeowlyCommandMissingError) {
+    // showHelp calls process.exit internally.
     err.showHelp(1);
-  } else {
-    throw err;
   }
+
+  /** @type {string | undefined} */
+  let errorTitle;
+  /** @type {string} */
+  let errorMessage = '';
+  /** @type {string | undefined} */
+  let errorBody;
+
+  if (err instanceof InputError) {
+    errorTitle = 'Invalid input';
+    errorMessage = err.message;
+    errorBody = err.body;
+  } else if (
+    isErrorWithCode(err) &&
+    (err.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ||
+      err.code === 'ERR_PARSE_ARGS_INVALID_OPTION_VALUE')
+  ) {
+    errorTitle = 'Invalid input';
+    errorMessage = err.message;
+  }
+
+  if (!errorTitle) {
+    if (err instanceof Error) {
+      errorTitle = 'Unexpected error';
+      errorMessage = err.message;
+      errorBody = err.stack;
+    } else {
+      errorTitle = 'Unexpected error with no details';
+    }
+  }
+
+  console.error(`${chalk.white.bgRed(errorTitle + ':')} ${errorMessage}`);
+  if (errorBody) {
+    console.error('\n' + errorBody);
+  }
+
+  process.exit(1);
 }

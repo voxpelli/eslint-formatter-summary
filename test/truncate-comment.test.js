@@ -80,6 +80,22 @@ test('truncateComment clamps gracefully when sizeCap is below HEADROOM', () => {
   assert.match(out, /<summary>Tail projects \(3 truncated/);
 });
 
+test('truncateComment falls back to a short note when tail summary itself exceeds sizeCap', () => {
+  // 400 truncated projects × ~60 bytes/row far exceeds HEADROOM (15 000),
+  // pushing the assembled output past sizeCap. The final byte-check must
+  // swap the tail table for a short fallback line so the output still fits.
+  const results = Array.from({ length: 400 }, (_, i) => makeProject(i));
+  const md = results.map((_, i) => renderBlock(i)).join('');
+  const out = truncateComment(md, results, { sizeCap: 20_000 });
+  assert.ok(
+    Buffer.byteLength(out, 'utf8') <= 20_000,
+    'output must fit within sizeCap even with a pathological tail length'
+  );
+  assert.match(out, /tail projects omitted/);
+  // The full per-project table must NOT have been emitted
+  assert.ok(!out.includes('<summary>Tail projects'));
+});
+
 test('truncateComment output stays within the byte cap even with multi-byte content', () => {
   // Each '中' is 3 UTF-8 bytes. A code-unit slice at N chars would re-encode
   // to up to ~3N bytes, blowing the cap. Byte-safe slice must hold the line.

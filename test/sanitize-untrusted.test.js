@@ -57,3 +57,24 @@ test('default length cap is 200', () => {
   const result = sanitize(long);
   assert.equal(result.length, 201);
 });
+
+test('collapses embedded newline to a single space', () => {
+  assert.equal(sanitize('rule\nid'), 'rule id');
+});
+
+test('collapses embedded tab to a single space', () => {
+  assert.equal(sanitize('rule\tid'), 'rule id');
+});
+
+test('collapses CR-LF sequence to a single space', () => {
+  assert.equal(sanitize('a\r\nb'), 'a b');
+});
+
+test('collapses mixed consecutive whitespace to a single space', () => {
+  assert.equal(sanitize('a\n\n\tb'), 'a b');
+});
+
+test('is idempotent after whitespace collapse', () => {
+  const input = 'foo\nbar\tbaz\r\nqux';
+  assert.equal(sanitize(sanitize(input)), sanitize(input));
+});

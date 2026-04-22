@@ -32,7 +32,7 @@ test('renderProjectBlock shows fixable count in summary when >0', () => {
     fixableErrorCount: 1,
     rules: { semi: { errors: 1, warnings: 0, fixable: 1, files: ['a.js:1'] } },
   }));
-  assert.ok(out.includes('1 errors, 0 warnings (1 fixable :wrench:)'));
+  assert.ok(out.includes('1 errors, 0 warnings (1 fixable 🔧)'));
 });
 
 test('renderProjectBlock emits pipe-table header', () => {

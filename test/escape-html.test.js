@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import escapeHtml from '../lib/escape-html.js';
+import { escapeHtml } from '../lib/utils/text.js';
 
 test('escapeHtml escapes < and >', () => {
   assert.equal(escapeHtml('<script>'), '&lt;script&gt;');

@@ -27,7 +27,7 @@
     "bin/eslint-summary.js",
     "index.cjs",
     "lib/*.js",
-    "lib/cli/*.js"
+    "lib/*/*.js"
   ],
   "scripts": {
     "check:installed-check": "installed-check -i @voxpelli/eslint-config",

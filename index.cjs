@@ -1,36 +1,15 @@
-/**
- * Parse a truthy-ish env-var value.
- *
- * @param {string | undefined} raw
- * @returns {boolean}
- */
-const envTruthy = (raw) => raw === 'true' || raw === '1' || raw === 'yes';
+const { format } = require('./lib/format-results.js');
+const { envPositiveInt, envTruthy } = require('./lib/utils/env.js');
+const { writeStepSummary } = require('./lib/write-step-summary.js');
 
-/**
- * Parse a positive-integer env-var value. Invalid values fall back to the
- * default and log a single warning to stderr — we never want a bad env var
- * to crash an ESLint run.
- *
- * @param {string | undefined} raw
- * @param {string} name
- * @returns {number | undefined}
- */
-const envPositiveInt = (raw, name) => {
-  if (raw === undefined || raw === '') return;
-  const n = Number(raw);
-  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
-    process.stderr.write(`eslint-formatter-summary: ${name} must be a positive integer (got "${raw}"); using default\n`);
-    return;
-  }
-  return n;
-};
+/** @import { ESLint } from 'eslint' */
 
 /**
  * Generates formatted summary output from ESLint result set
  *
- * @param   {import('eslint').ESLint.LintResult[]}   results  ESLint results
- * @param   {import('eslint').ESLint.LintResultData} context
- * @returns {Promise<string>}                                 The formatted output
+ * @param   {ESLint.LintResult[]}   results
+ * @param   {ESLint.LintResultData} context
+ * @returns {Promise<string>}
  */
 module.exports = async function formatter (results, { cwd, rulesMeta }) {
   const {
@@ -44,7 +23,6 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
     GITHUB_STEP_SUMMARY,
     // eslint-disable-next-line n/no-process-env -- formatter reads its config exclusively from env vars; this is the only access point
   } = process.env;
-  const { format } = await import('./lib/format-results.js');
 
   const options = {
     cwd,
@@ -77,7 +55,7 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
     const markdown = EFS_OUTPUT === 'markdown' && !cap
       ? output
       : format(results, { ...options, output: 'markdown' });
-    const { 'default': writeStepSummary } = await import('./lib/write-step-summary.js');
+
     await writeStepSummary(GITHUB_STEP_SUMMARY, markdown);
   }
 

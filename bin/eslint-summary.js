@@ -2,6 +2,7 @@
 
 import chalk from 'chalk';
 import { PeowlyCommandMissingError, peowlyCommands } from 'peowly-commands';
+import { messageWithCauses, stackWithCauses } from 'pony-cause';
 
 import cmdAggregate from '../lib/cli/cmd-aggregate.js';
 import cmdPrepare from '../lib/cli/cmd-prepare.js';
@@ -21,44 +22,45 @@ try {
   });
 } catch (err) {
   if (err instanceof PeowlyCommandMissingError) {
-    // showHelp calls process.exit internally.
+    // showHelp calls process.exit internally — the rest of this catch
+    // is skipped via the else branch so control flow doesn't silently
+    // fall through to the "unexpected error" path if upstream behavior
+    // ever changes.
     err.showHelp(1);
-  }
+  } else {
+    /** @type {string | undefined} */
+    let errorTitle;
+    /** @type {string} */
+    let errorMessage = '';
+    /** @type {string | undefined} */
+    let errorBody;
 
-  /** @type {string | undefined} */
-  let errorTitle;
-  /** @type {string} */
-  let errorMessage = '';
-  /** @type {string | undefined} */
-  let errorBody;
-
-  if (err instanceof InputError) {
-    errorTitle = 'Invalid input';
-    errorMessage = err.message;
-    errorBody = err.body;
-  } else if (
-    isErrorWithCode(err) &&
-    (err.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ||
-      err.code === 'ERR_PARSE_ARGS_INVALID_OPTION_VALUE')
-  ) {
-    errorTitle = 'Invalid input';
-    errorMessage = err.message;
-  }
-
-  if (!errorTitle) {
-    if (err instanceof Error) {
-      errorTitle = 'Unexpected error';
+    if (err instanceof InputError) {
+      errorTitle = 'Invalid input';
+      errorMessage = messageWithCauses(err);
+      errorBody = err.body;
+    } else if (
+      isErrorWithCode(err) &&
+      (err.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION' ||
+        err.code === 'ERR_PARSE_ARGS_INVALID_OPTION_VALUE')
+    ) {
+      errorTitle = 'Invalid input';
       errorMessage = err.message;
-      errorBody = err.stack;
+    } else if (err instanceof Error) {
+      // pony-cause walks the full `err.cause` chain (Error.prototype.stack
+      // and .message don't). Circular-safe via its internal visited-set.
+      errorTitle = 'Unexpected error';
+      errorMessage = messageWithCauses(err);
+      errorBody = stackWithCauses(err);
     } else {
       errorTitle = 'Unexpected error with no details';
     }
-  }
 
-  console.error(`${chalk.white.bgRed(errorTitle + ':')} ${errorMessage}`);
-  if (errorBody) {
-    console.error('\n' + errorBody);
-  }
+    console.error(`${chalk.white.bgRed(errorTitle + ':')} ${errorMessage}`);
+    if (errorBody) {
+      console.error('\n' + errorBody);
+    }
 
-  process.exit(1);
+    process.exit(1);
+  }
 }

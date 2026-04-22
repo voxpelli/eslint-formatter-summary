@@ -66,7 +66,7 @@ test('renderProjectBlock truncates per-rule file list at fileCap with overflow t
     errorCount: 7,
     rules: { 'no-undef': { errors: 7, warnings: 0, fixable: 0, files } },
   }), { fileCap: 3 });
-  assert.ok(out.includes('... and 4 more'));
+  assert.ok(out.includes('… and 4 more'));
   assert.ok(out.includes('a.js:1'));
   assert.ok(out.includes('a.js:3'));
   assert.ok(!out.includes('a.js:4'), 'fourth file should be hidden by cap');

@@ -201,6 +201,47 @@ test('format() markdown: scrubs secret-shaped tokens in rule ids and file paths'
   assert.match(out, /\[REDACTED\]/);
 });
 
+test('format() markdown: cap.fileCap caps per-rule file list with overflow trailer', () => {
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const many = /** @type {any} */ (
+    Array.from({ length: 20 }, (_, i) => ({
+      filePath: `/proj/src/f${i}.js`,
+      messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
+    }))
+  );
+  const out = format(many, { cwd: '/proj', output: 'markdown', cap: { fileCap: 5 } });
+  assert.match(out, /… and 15 more/);
+  assert.ok(!out.includes('f19.js'), 'files past fileCap should be hidden');
+});
+
+test('format() markdown: cap.sizeCap truncates output and appends trailer', () => {
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const many = /** @type {any} */ (
+    Array.from({ length: 60 }, (_, i) => ({
+      filePath: `/proj/src/${'padding-path-'.repeat(10)}${i}.js`,
+      messages: [{ ruleId: `rule-${i}`, severity: 2, line: 1, column: 1, message: 'x' }],
+    }))
+  );
+  const full = format(many, { cwd: '/proj', output: 'markdown' });
+  const capped = format(many, { cwd: '/proj', output: 'markdown', cap: { sizeCap: 5_000 } });
+  assert.ok(capped.length < full.length, 'capped must be shorter');
+  assert.ok(Buffer.byteLength(capped, 'utf8') <= 5_000, 'capped must honor byte limit');
+  assert.match(capped, /rule rows truncated/);
+});
+
+test('format() csv: cap is ignored (machine output never truncated)', () => {
+  /** @type {import('eslint').ESLint.LintResult[]} */
+  const many = /** @type {any} */ (
+    Array.from({ length: 100 }, (_, i) => ({
+      filePath: `/p/f${i}.js`,
+      messages: [{ ruleId: `r${i}`, severity: 2, line: 1, column: 1, message: 'x' }],
+    }))
+  );
+  const out = format(many, { cwd: '/p', output: 'csv', cap: { sizeCap: 500, fileCap: 1 } });
+  const rows = out.split('\n');
+  assert.equal(rows.length, 101, 'every rule row should survive (header + 100 rules)');
+});
+
 test('format() csv: secret-shaped rule ids pass through untouched (machine-consumed)', () => {
   const token = 'ghp_' + 'A'.repeat(40);
   /** @type {import('eslint').ESLint.LintResult[]} */

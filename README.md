@@ -142,8 +142,33 @@ errors,warnings,fixable,rule
 When running under GitHub Actions, the formatter automatically appends its markdown output to [`$GITHUB_STEP_SUMMARY`](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#adding-a-job-summary), so failing rules surface on the job summary page. This happens regardless of `EFS_OUTPUT` — stdout still uses whatever format you configured.
 
 - Skipped when the run is clean (no errors and no warnings).
-- Opt out with `EFS_GITHUB_STEP_SUMMARY=false` (or `0`) — useful for jobs that should only emit the formatter's stdout.
+- Opt out with `EFS_SKIP_GH_SUMMARY=true` — useful for jobs that should only emit the formatter's stdout.
 - If the write fails (e.g. read-only path), a warning is logged to stderr but the lint run continues.
+
+### Sticky PR comment (size caps)
+
+By default the formatter emits **uncapped** markdown. That's the right shape for a local terminal, a file redirect, or `$GITHUB_STEP_SUMMARY` (which has ~1 MB of headroom). But posting into a PR sticky comment is more constrained — GitHub caps comments at ~65 KB, and a noisy project can blow past that.
+
+Set `EFS_CAP_GH_COMMENT=true` to opt into capped output. When set:
+
+- Per-rule file lists are capped (default 50 entries, overridable with `EFS_FILE_CAP`); overflow collapses into `… and N more`.
+- Total output is capped by bytes (default 60 000, overridable with `EFS_SIZE_CAP`); the output is truncated at the last complete table row and a trailer is appended.
+- `$GITHUB_STEP_SUMMARY` is **still written uncapped**, so the step-summary page has the full report while the stdout (typically fed into a sticky-comment action) stays under budget.
+
+The markdown output is portable — it uses Unicode emoji (🔧 / ✅) and Unicode em-dash rather than GitHub-only `:wrench:` / `&mdash;` shortcodes, so it renders identically on GitLab, Bitbucket, Gitea, Slack, email, and plain-Markdown viewers. (The CLI aggregate path emits GitHub-specific `blob/HEAD/<path>#L<line>` anchors for clickable file references; on other forges those fall back to plain text.)
+
+### Environment variables
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `EFS_OUTPUT` | (CLI colored) | `markdown` or `csv` to change stdout format |
+| `EFS_SORT_BY` | `errors` | `rule` / `errors` / `warnings` |
+| `EFS_SORT_REVERSE` | `false` | `true` reverses the sort |
+| `EFS_CAP_GH_COMMENT` | unset | Truthy (`true`/`1`/`yes`) enables sticky-comment sizing caps |
+| `EFS_FILE_CAP` | `50` | Per-rule file-entry cap when `EFS_CAP_GH_COMMENT` is on |
+| `EFS_SIZE_CAP` | `60000` | Total byte cap when `EFS_CAP_GH_COMMENT` is on |
+| `EFS_SKIP_GH_SUMMARY` | unset | Truthy skips the `$GITHUB_STEP_SUMMARY` append |
+| `GITHUB_STEP_SUMMARY` | unset | When set (and not skipped), formatter appends uncapped markdown here |
 
 ## CLI
 

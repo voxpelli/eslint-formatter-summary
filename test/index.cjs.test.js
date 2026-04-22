@@ -120,7 +120,7 @@ for (const optInValue of ['true', '1', 'yes']) {
   });
 }
 
-test('index.cjs: EFS_CAP_GH_COMMENT unset leaves markdown uncapped (file list intact)', async () => {
+test('index.cjs: EFS_CAP unset leaves markdown uncapped (file list intact)', async () => {
   const files = Array.from({ length: 120 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
     errorCount: 1, warningCount: 0,
@@ -138,16 +138,16 @@ test('index.cjs: EFS_CAP_GH_COMMENT unset leaves markdown uncapped (file list in
   }
 });
 
-test('index.cjs: EFS_CAP_GH_COMMENT=true applies default file cap (50)', async () => {
+test('index.cjs: EFS_CAP=true applies default file cap (50)', async () => {
   const files = Array.from({ length: 120 }, (_, i) => ({
     filePath: `/proj/src/f${i}.js`,
     errorCount: 1, warningCount: 0,
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
-  const prevCap = process.env['EFS_CAP_GH_COMMENT'];
+  const prevCap = process.env['EFS_CAP'];
   process.env['EFS_OUTPUT'] = 'markdown';
-  process.env['EFS_CAP_GH_COMMENT'] = 'true';
+  process.env['EFS_CAP'] = 'true';
   try {
     const out = await formatter(/** @type {any} */ (files), context);
     assert.match(out, /… and 70 more/, 'overflow trailer should show 120-50=70');
@@ -155,8 +155,8 @@ test('index.cjs: EFS_CAP_GH_COMMENT=true applies default file cap (50)', async (
   } finally {
     if (prevOutput === undefined) delete process.env['EFS_OUTPUT'];
     else process.env['EFS_OUTPUT'] = prevOutput;
-    if (prevCap === undefined) delete process.env['EFS_CAP_GH_COMMENT'];
-    else process.env['EFS_CAP_GH_COMMENT'] = prevCap;
+    if (prevCap === undefined) delete process.env['EFS_CAP'];
+    else process.env['EFS_CAP'] = prevCap;
   }
 });
 
@@ -167,10 +167,10 @@ test('index.cjs: EFS_FILE_CAP overrides the default when caps are on', async () 
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
-  const prevCap = process.env['EFS_CAP_GH_COMMENT'];
+  const prevCap = process.env['EFS_CAP'];
   const prevFile = process.env['EFS_FILE_CAP'];
   process.env['EFS_OUTPUT'] = 'markdown';
-  process.env['EFS_CAP_GH_COMMENT'] = '1';
+  process.env['EFS_CAP'] = '1';
   process.env['EFS_FILE_CAP'] = '5';
   try {
     const out = await formatter(/** @type {any} */ (files), context);
@@ -179,8 +179,8 @@ test('index.cjs: EFS_FILE_CAP overrides the default when caps are on', async () 
   } finally {
     if (prevOutput === undefined) delete process.env['EFS_OUTPUT'];
     else process.env['EFS_OUTPUT'] = prevOutput;
-    if (prevCap === undefined) delete process.env['EFS_CAP_GH_COMMENT'];
-    else process.env['EFS_CAP_GH_COMMENT'] = prevCap;
+    if (prevCap === undefined) delete process.env['EFS_CAP'];
+    else process.env['EFS_CAP'] = prevCap;
     if (prevFile === undefined) delete process.env['EFS_FILE_CAP'];
     else process.env['EFS_FILE_CAP'] = prevFile;
   }
@@ -195,10 +195,10 @@ test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps 
   const dir = mkdtempSync(join(tmpdir(), 'efs-'));
   const summaryPath = join(dir, 'step.md');
   const prevOutput = process.env['EFS_OUTPUT'];
-  const prevCap = process.env['EFS_CAP_GH_COMMENT'];
+  const prevCap = process.env['EFS_CAP'];
   const prevSummary = process.env['GITHUB_STEP_SUMMARY'];
   process.env['EFS_OUTPUT'] = 'markdown';
-  process.env['EFS_CAP_GH_COMMENT'] = 'true';
+  process.env['EFS_CAP'] = 'true';
   process.env['GITHUB_STEP_SUMMARY'] = summaryPath;
   try {
     const out = await formatter(/** @type {any} */ (files), context);
@@ -209,8 +209,8 @@ test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps 
   } finally {
     if (prevOutput === undefined) delete process.env['EFS_OUTPUT'];
     else process.env['EFS_OUTPUT'] = prevOutput;
-    if (prevCap === undefined) delete process.env['EFS_CAP_GH_COMMENT'];
-    else process.env['EFS_CAP_GH_COMMENT'] = prevCap;
+    if (prevCap === undefined) delete process.env['EFS_CAP'];
+    else process.env['EFS_CAP'] = prevCap;
     if (prevSummary === undefined) delete process.env['GITHUB_STEP_SUMMARY'];
     else process.env['GITHUB_STEP_SUMMARY'] = prevSummary;
     rmSync(dir, { recursive: true, force: true });
@@ -224,10 +224,10 @@ test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async ()
     messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }],
   }));
   const prevOutput = process.env['EFS_OUTPUT'];
-  const prevCap = process.env['EFS_CAP_GH_COMMENT'];
+  const prevCap = process.env['EFS_CAP'];
   const prevFile = process.env['EFS_FILE_CAP'];
   process.env['EFS_OUTPUT'] = 'markdown';
-  process.env['EFS_CAP_GH_COMMENT'] = 'true';
+  process.env['EFS_CAP'] = 'true';
   process.env['EFS_FILE_CAP'] = 'not-a-number';
   const origStderr = process.stderr.write.bind(process.stderr);
   /** @type {string[]} */
@@ -242,8 +242,8 @@ test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async ()
     process.stderr.write = origStderr;
     if (prevOutput === undefined) delete process.env['EFS_OUTPUT'];
     else process.env['EFS_OUTPUT'] = prevOutput;
-    if (prevCap === undefined) delete process.env['EFS_CAP_GH_COMMENT'];
-    else process.env['EFS_CAP_GH_COMMENT'] = prevCap;
+    if (prevCap === undefined) delete process.env['EFS_CAP'];
+    else process.env['EFS_CAP'] = prevCap;
     if (prevFile === undefined) delete process.env['EFS_FILE_CAP'];
     else process.env['EFS_FILE_CAP'] = prevFile;
   }

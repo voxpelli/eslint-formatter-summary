@@ -34,7 +34,7 @@ const envPositiveInt = (raw, name) => {
  */
 module.exports = async function formatter (results, { cwd, rulesMeta }) {
   const {
-    EFS_CAP_GH_COMMENT,
+    EFS_CAP,
     EFS_FILE_CAP,
     EFS_OUTPUT,
     EFS_SIZE_CAP,
@@ -53,11 +53,11 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
     rulesMeta,
   };
 
-  // Caps are purely opt-in via EFS_CAP_GH_COMMENT — the formatter default is
+  // Caps are purely opt-in via EFS_CAP — the formatter default is
   // uncapped output so non-CI consumers (terminal, file, piped tools) see
   // every file and every rule. Caps only apply to the markdown branch; CSV
   // and the chalk-coloured CLI branch ignore them.
-  const cap = envTruthy(EFS_CAP_GH_COMMENT)
+  const cap = envTruthy(EFS_CAP)
     ? {
         fileCap: envPositiveInt(EFS_FILE_CAP, 'EFS_FILE_CAP'),
         sizeCap: envPositiveInt(EFS_SIZE_CAP, 'EFS_SIZE_CAP'),

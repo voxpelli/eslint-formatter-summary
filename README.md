@@ -149,7 +149,7 @@ When running under GitHub Actions, the formatter automatically appends its markd
 
 By default the formatter emits **uncapped** markdown. That's the right shape for a local terminal, a file redirect, or `$GITHUB_STEP_SUMMARY` (which has ~1 MB of headroom). But posting into a PR sticky comment is more constrained — GitHub caps comments at ~65 KB, and a noisy project can blow past that.
 
-Set `EFS_CAP_GH_COMMENT=true` to opt into capped output. When set:
+Set `EFS_CAP=true` to opt into capped output. When set:
 
 - Per-rule file lists are capped (default 50 entries, overridable with `EFS_FILE_CAP`); overflow collapses into `… and N more`.
 - Total output is capped by bytes (default 60 000, overridable with `EFS_SIZE_CAP`); the output is truncated at the last complete table row and a trailer is appended.
@@ -164,9 +164,9 @@ The markdown output is portable — it uses Unicode emoji (🔧 / ✅) and Unico
 | `EFS_OUTPUT` | (CLI colored) | `markdown` or `csv` to change stdout format |
 | `EFS_SORT_BY` | `errors` | `rule` / `errors` / `warnings` |
 | `EFS_SORT_REVERSE` | `false` | `true` reverses the sort |
-| `EFS_CAP_GH_COMMENT` | unset | Truthy (`true`/`1`/`yes`) enables sticky-comment sizing caps |
-| `EFS_FILE_CAP` | `50` | Per-rule file-entry cap when `EFS_CAP_GH_COMMENT` is on |
-| `EFS_SIZE_CAP` | `60000` | Total byte cap when `EFS_CAP_GH_COMMENT` is on |
+| `EFS_CAP` | unset | Truthy (`true`/`1`/`yes`) enables sticky-comment sizing caps |
+| `EFS_FILE_CAP` | `50` | Per-rule file-entry cap when `EFS_CAP` is on |
+| `EFS_SIZE_CAP` | `60000` | Total byte cap when `EFS_CAP` is on |
 | `EFS_SKIP_GH_SUMMARY` | unset | Truthy skips the `$GITHUB_STEP_SUMMARY` append |
 | `GITHUB_STEP_SUMMARY` | unset | When set (and not skipped), formatter appends uncapped markdown here |
 

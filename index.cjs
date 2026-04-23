@@ -27,7 +27,7 @@ module.exports = async function formatter (results, { cwd, rulesMeta }) {
   const options = {
     cwd,
     sortByProp: EFS_SORT_BY,
-    sortReverse: EFS_SORT_REVERSE === 'true',
+    sortReverse: envTruthy(EFS_SORT_REVERSE),
     rulesMeta,
   };
 

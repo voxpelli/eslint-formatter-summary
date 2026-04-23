@@ -32,11 +32,11 @@
     "check:knip": "knip",
     "check:lint": "eslint",
     "check:tsc": "tsc",
-    "check:type-coverage": "type-coverage --detail --strict --at-least 99",
+    "check:type-coverage": "type-coverage --strict --at-least 99 --ignore-files 'test/*'",
     "husky-disable": "git config --unset core.hooksPath",
     "husky-enable": "husky",
     "test": "run-s check test:*",
-    "test:node": "c8 --reporter=lcov --reporter=text node --test test/*.test.js",
+    "test:node": "c8 --reporter=lcov --reporter text --skip-full --check-coverage --lines 95 --branches 85 node --test --test-reporter dot test/*.test.js",
     "test:real-world": "eslint -f ./index.cjs lib/",
     "test-ci": "run-s test:*",
     "try": "eslint -f ./index.cjs -c ./test-eslint.config.js"

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import cmdAggregate from '../lib/cli/cmd-aggregate.js';
-import cmdPrepare from '../lib/cli/cmd-prepare.js';
+import { cmdAggregate } from '../lib/cli/cmd-aggregate.js';
+import { cmdPrepare } from '../lib/cli/cmd-prepare.js';
 import { parseNumericFlag } from '../lib/cli/coerce.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
@@ -72,7 +72,14 @@ test('parseNumericFlag: throws InputError for fractional', () => {
 test('cmd-aggregate run: rejects with InputError when no positional given', async () => {
   await assert.rejects(
     cmdAggregate.run([], import.meta, { parentName }),
-    (err) => err instanceof InputError && /expected exactly one <results-dir>/.test(err.message)
+    (err) => err instanceof InputError && /expected at least one <results-dir>/.test(err.message)
+  );
+});
+
+test('cmd-aggregate run: rejects with InputError when given multiple positionals', async () => {
+  await assert.rejects(
+    cmdAggregate.run(['a.json', 'b.json'], import.meta, { parentName }),
+    (err) => err instanceof InputError && /no more than one <results-dir>/.test(err.message)
   );
 });
 

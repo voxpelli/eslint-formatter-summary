@@ -223,7 +223,14 @@ test('aggregate: --sort-by with invalid value exits 1 via InputError', async () 
 test('aggregate: exits 1 via InputError when no positional argument is given', async () => {
   const { code, stderr } = await runCli(['aggregate']);
   assert.equal(code, 1);
-  assert.match(stderr, /expected exactly one <results-dir>/);
+  assert.match(stderr, /expected at least one <results-dir>/);
+  assert.match(stderr, /Invalid input:/);
+});
+
+test('aggregate: exits 1 via InputError when given multiple positional arguments', async () => {
+  const { code, stderr } = await runCli(['aggregate', 'a.json', 'b.json']);
+  assert.equal(code, 1);
+  assert.match(stderr, /no more than one <results-dir>/);
   assert.match(stderr, /Invalid input:/);
 });
 

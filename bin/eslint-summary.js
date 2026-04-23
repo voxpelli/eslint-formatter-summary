@@ -4,8 +4,8 @@ import chalk from 'chalk';
 import { PeowlyCommandMissingError, peowlyCommands } from 'peowly-commands';
 import { messageWithCauses, stackWithCauses } from 'pony-cause';
 
-import cmdAggregate from '../lib/cli/cmd-aggregate.js';
-import cmdPrepare from '../lib/cli/cmd-prepare.js';
+import { cmdAggregate } from '../lib/cli/cmd-aggregate.js';
+import { cmdPrepare } from '../lib/cli/cmd-prepare.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
 /** @import { CliCommands } from 'peowly-commands' */

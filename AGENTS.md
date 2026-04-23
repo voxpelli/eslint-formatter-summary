@@ -10,7 +10,7 @@ For full project context and usage details, see [`README.md`](./README.md).
 - Output modes: CLI (chalk), markdown-table, CSV
 - Includes `eslint-summary` CLI with `prepare` + `aggregate` subcommands
 - Peer dep: ESLint `>=9.13.0` (flat configs)
-- Node: `^20.19.0 || ^22.13.0 || >=24.0.0`
+- Node: `^22.13.0 || >=24.0.0`
 
 ## High-signal commands
 
@@ -20,6 +20,21 @@ Run these after code changes:
 - `npm run test:node` — unit tests with coverage
 - `npm run test:real-world` — self-host formatter on `lib/`
 - `npm test` — full check + tests (preferred before finalizing)
+
+Default scripts use compact output on purpose (`dot` reporter, `--skip-full` coverage, no type-coverage detail) to keep logs and agent context lean.
+
+When you need more detail to diagnose a failure:
+
+```sh
+# Full TAP output (see which specific test failed and why)
+npx c8 node --test --test-reporter spec 'test/**/*.spec.js'
+
+# Per-file coverage table (find which files lack coverage)
+npx c8 report --reporter=text
+
+# Type-coverage with every uncovered identifier listed
+npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
+```
 
 ## Architecture constraints
 
@@ -35,6 +50,7 @@ Run these after code changes:
 
 - Use ESM syntax in `lib/` (do not add CommonJS there)
 - Keep `index.cjs` as the sole CommonJS file
+- CLI command modules in `lib/cli/` use named exports (`cmdPrepare`, `cmdAggregate`); avoid default exports for new or refactored command modules
 - Follow neostandard style via `@voxpelli/eslint-config`
 - Types are JSDoc-annotated and validated by `tsc` (no compile step)
 - Keep type coverage expectations high (`type-coverage` target: 99%)
@@ -54,6 +70,7 @@ Run these after code changes:
 
 - Keep changes minimal and targeted; avoid broad refactors unless requested.
 - Add/update tests when behavior changes.
+- For export/rename refactors, use symbol/reference lookup before editing imports manually.
 - Do not bypass failing checks.
 - Use conventional commits.
 - Do not use GPG signing when committing.

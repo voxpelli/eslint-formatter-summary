@@ -19,6 +19,10 @@ const makeProject = (i) => ({
   rules: {},
 });
 
+/**
+ * @param {number} i
+ * @returns {string}
+ */
 const renderBlock = (i) =>
   `<details>\n<summary>owner/proj-${i}</summary>\n\n` +
   'padding '.repeat(500) +   // ~4 KB per block
@@ -101,6 +105,10 @@ test('truncateComment falls back to a short note when tail summary itself exceed
   assert.ok(!out.includes('<summary>Tail projects'));
 });
 
+/**
+ * @param {number} i
+ * @returns {string}
+ */
 const cjkBlock = (i) =>
   `<details>\n<summary>owner/proj-${i}</summary>\n\n` +
   '中'.repeat(1500) + '\n</details>\n\n';

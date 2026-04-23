@@ -17,6 +17,7 @@ test('rejects null', () => {
 });
 
 test('rejects undefined', () => {
+  // @ts-expect-error -- exercising the omitted-argument runtime fallback branch
   assert.equal(isValidProjectResult(), false);
 });
 

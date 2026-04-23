@@ -5,6 +5,11 @@ import truncateFormatterMarkdown from '../lib/truncate-formatter-markdown.js';
 
 const header = '| Errors | Warnings | Fixable | Rule |\n| ------ | -------- | ------- | ---- |\n';
 
+/**
+ * @param {number} i
+ * @param {string} payload
+ * @returns {string}
+ */
 const makeRow = (i, payload) => `| ${i} | 0 | 0 | ${payload} |\n`;
 
 test('truncateFormatterMarkdown returns input unchanged when under cap', () => {

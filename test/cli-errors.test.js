@@ -7,6 +7,15 @@ import { parseNumericFlag } from '../lib/cli/coerce.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
 const parentName = 'eslint-summary';
+const meta = /** @type {import('peowly-commands').CliMeta} */ ({ name: parentName });
+
+/**
+ * @param {unknown} err
+ * @param {RegExp} pattern
+ * @returns {boolean}
+ */
+const isInputErrorMatching = (err, pattern) =>
+  err instanceof InputError && pattern.test(err.message);
 
 test('InputError: captures body and cause', () => {
   const cause = new Error('underlying');
@@ -71,42 +80,42 @@ test('parseNumericFlag: throws InputError for fractional', () => {
 
 test('cmd-aggregate run: rejects with InputError when no positional given', async () => {
   await assert.rejects(
-    cmdAggregate.run([], import.meta, { parentName }),
-    (err) => err instanceof InputError && /expected at least one <results-dir>/.test(err.message)
+    async () => { await cmdAggregate.run([], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /expected at least one <results-dir>/)
   );
 });
 
 test('cmd-aggregate run: rejects with InputError when given multiple positionals', async () => {
   await assert.rejects(
-    cmdAggregate.run(['a.json', 'b.json'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /no more than one <results-dir>/.test(err.message)
+    async () => { await cmdAggregate.run(['a.json', 'b.json'], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /no more than one <results-dir>/)
   );
 });
 
 test('cmd-aggregate run: rejects with InputError on invalid --sort-by', async () => {
   await assert.rejects(
-    cmdAggregate.run(['--sort-by', 'bogus', '/tmp/nope'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /--sort-by must be "project" or "severity"/.test(err.message)
+    async () => { await cmdAggregate.run(['--sort-by', 'bogus', '/tmp/nope'], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /--sort-by must be "project" or "severity"/)
   );
 });
 
 test('cmd-aggregate run: rejects with InputError when results dir is missing', async () => {
   await assert.rejects(
-    cmdAggregate.run(['/definitely/does/not/exist/anywhere'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /results directory not found/.test(err.message)
+    async () => { await cmdAggregate.run(['/definitely/does/not/exist/anywhere'], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /results directory not found/)
   );
 });
 
 test('cmd-prepare run: rejects with InputError when given multiple positionals', async () => {
   await assert.rejects(
-    cmdPrepare.run(['a.json', 'b.json'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /expected stdin or a single/.test(err.message)
+    async () => { await cmdPrepare.run(['a.json', 'b.json'], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /expected stdin or a single/)
   );
 });
 
 test('cmd-prepare run: rejects with InputError when input file cannot be read', async () => {
   await assert.rejects(
-    cmdPrepare.run(['/definitely/does/not/exist.json'], import.meta, { parentName }),
-    (err) => err instanceof InputError && /could not read/.test(err.message)
+    async () => { await cmdPrepare.run(['/definitely/does/not/exist.json'], meta, { parentName }); },
+    (err) => isInputErrorMatching(err, /could not read/)
   );
 });

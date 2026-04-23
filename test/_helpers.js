@@ -30,8 +30,12 @@ export const runCli = (argv, { cwd, env, input } = {}) => new Promise((resolve, 
   });
   let stdout = '';
   let stderr = '';
-  child.stdout.on('data', (chunk) => { stdout += String(chunk); });
-  child.stderr.on('data', (chunk) => { stderr += String(chunk); });
+  if (child.stdout) {
+    child.stdout.on('data', (chunk) => { stdout += String(chunk); });
+  }
+  if (child.stderr) {
+    child.stderr.on('data', (chunk) => { stderr += String(chunk); });
+  }
   child.on('error', reject);
   child.on('close', (code) => { resolve({ stdout, stderr, code: code ?? 0 }); });
   if (input !== undefined && child.stdin) {

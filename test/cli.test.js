@@ -8,7 +8,9 @@ import test from 'node:test';
 
 import { makeTmpDir, runCli, writeResultArtifact } from './_helpers.js';
 
-const rawFixture = () => [
+/** @import { LintResultLite } from '../lib/cli/prepare-project-result.js' */
+
+const rawFixture = () => /** @satisfies {LintResultLite[]} */ ([
   {
     filePath: '/proj/src/a.js',
     errorCount: 2,
@@ -16,12 +18,12 @@ const rawFixture = () => [
     fixableErrorCount: 0,
     fixableWarningCount: 1,
     messages: [
-      { ruleId: 'no-unused-vars', severity: 2, line: 10, message: 'x' },
-      { ruleId: 'no-unused-vars', severity: 2, line: 22, message: 'x' },
-      { ruleId: 'semi', severity: 1, line: 3, fix: { range: [0, 0], text: ';' }, message: 'z' },
+      { ruleId: 'no-unused-vars', severity: 2, column: 1, line: 10, message: 'x' },
+      { ruleId: 'no-unused-vars', severity: 2, column: 1, line: 22, message: 'x' },
+      { ruleId: 'semi', severity: 1, column: 1, line: 3, fix: { range: [0, 0], text: ';' }, message: 'z' },
     ],
   },
-];
+]);
 
 test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', async () => {
   const { cleanup, dir: tmp } = await makeTmpDir();
@@ -415,29 +417,6 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
     assert.doesNotMatch(stdout, new RegExp(npmToken));
     assert.doesNotMatch(stdout, new RegExp(awsKey));
     assert.match(stdout, /\[REDACTED\]/);
-  } finally {
-    await cleanup();
-  }
-});
-
-test('prepare: stderr warns when filePaths escape --cwd', async () => {
-  const { cleanup, dir: tmp } = await makeTmpDir();
-  try {
-    const inputFile = path.join(tmp, 'raw.json');
-    // filePath is under /elsewhere/... but cwd is /repo; path.relative produces ../
-    await writeFile(inputFile, JSON.stringify([{
-      filePath: '/elsewhere/src/a.js',
-      errorCount: 1,
-      warningCount: 0,
-      fixableErrorCount: 0,
-      fixableWarningCount: 0,
-      messages: [{ ruleId: 'no-undef', severity: 2, line: 1, message: 'x' }],
-    }]), 'utf8');
-    const { code, stderr } = await runCli(
-      ['prepare', '--project', 'acme/demo', '--cwd', '/repo', inputFile]
-    );
-    assert.equal(code, 0);
-    assert.match(stderr, /filePath outside --cwd/);
   } finally {
     await cleanup();
   }

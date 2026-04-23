@@ -56,6 +56,7 @@ npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
 - Shared peowly flag groups should be spread into command `options` objects instead of duplicated inline.
 - CLI parsers should destructure `cli.input` and validate remainder positionals before use (for example `[inputPath = '', ...remainingInput]`).
 - String-backed numeric CLI flags should be parsed through `parseNumericFlag()` in `lib/cli/coerce.js` until peowly grows native number flags.
+- When validating unknown JSON/object shapes with `@voxpelli/typed-utils`, prefer progressive guards like `isObjectWithKey()`, `isObject()`, and `isOptionalKeyWithType()` over `Record<string, unknown>` casts.
 - Follow neostandard style via `@voxpelli/eslint-config`
 - Types are JSDoc-annotated and validated by `tsc` (no compile step)
 - Keep type coverage expectations high (`type-coverage` target: 99%)

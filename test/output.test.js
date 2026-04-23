@@ -47,14 +47,19 @@ test('writeOutput writes to stdout when out is empty', async () => {
 });
 
 test('writeOutput writes to file when out is a file path', async () => {
-  /** @type {Array<[string, string, string]>} */
+  /** @type {Array<{ file: string, data: string, encoding: string | null | undefined }>} */
   const calls = [];
 
   await writeOutput('hello\n', { out: 'out.txt' }, {
     writeToFile: async (...args) => {
-      calls.push(args);
+      const [file, data, options] = args;
+      calls.push({
+        file: String(file),
+        data: String(data),
+        encoding: typeof options === 'string' ? options : options?.encoding,
+      });
     },
   });
 
-  assert.deepEqual(calls, [['out.txt', 'hello\n', 'utf8']]);
+  assert.deepEqual(calls, [{ file: 'out.txt', data: 'hello\n', encoding: 'utf8' }]);
 });

@@ -27,6 +27,7 @@ test('renderAllPass renders the "all N pass" body with the given count', () => {
 });
 
 test('renderAllPass falls back to "?" when count is undefined', () => {
+  // @ts-expect-error -- exercising the omitted-argument runtime fallback branch
   assert.match(renderSuccess(), /All \? external projects pass/);
 });
 

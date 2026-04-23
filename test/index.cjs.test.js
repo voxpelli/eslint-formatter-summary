@@ -245,7 +245,6 @@ test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async ()
   const origStderr = process.stderr.write.bind(process.stderr);
   /** @type {string[]} */
   const captured = [];
-  // @ts-expect-error -- monkey-patch for the duration of this test
   process.stderr.write = (chunk) => { captured.push(String(chunk)); return true; };
   try {
     const out = await formatter(/** @type {any} */ (files), context);

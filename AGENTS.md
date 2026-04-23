@@ -43,6 +43,8 @@ npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
 - Keep the two-layer model:
   - entrypoint/env orchestration in `index.cjs`
   - implementation in `lib/`
+- Keep CLI-only shared concerns in `lib/cli/` rather than `lib/utils/`. When multiple commands share a peowly flag plus the logic that interprets it, co-locate them in one CLI module (for example `lib/cli/output.js` exports both `outputFlags` and `writeOutput()`).
+- Reserve `lib/utils/` for helpers reused outside the CLI command layer.
 - Aggregation pipeline lives in `lib/`:
   - message extraction/classification → aggregation → sorting → output formatting
 
@@ -51,6 +53,9 @@ npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
 - Use ESM syntax in `lib/` (do not add CommonJS there)
 - Keep `index.cjs` as the sole CommonJS file
 - CLI command modules in `lib/cli/` use named exports (`cmdPrepare`, `cmdAggregate`); avoid default exports for new or refactored command modules
+- Shared peowly flag groups should be spread into command `options` objects instead of duplicated inline.
+- CLI parsers should destructure `cli.input` and validate remainder positionals before use (for example `[inputPath = '', ...remainingInput]`).
+- String-backed numeric CLI flags should be parsed through `parseNumericFlag()` in `lib/cli/coerce.js` until peowly grows native number flags.
 - Follow neostandard style via `@voxpelli/eslint-config`
 - Types are JSDoc-annotated and validated by `tsc` (no compile step)
 - Keep type coverage expectations high (`type-coverage` target: 99%)
@@ -70,6 +75,7 @@ npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
 
 - Keep changes minimal and targeted; avoid broad refactors unless requested.
 - Add/update tests when behavior changes.
+- For `lib/cli/` changes, prefer exercising the real executable through helpers in `test/_helpers.js` (`runCli()`, `makeTmpDir()`, `writeResultArtifact()`) rather than only unit-testing internals.
 - For export/rename refactors, use symbol/reference lookup before editing imports manually.
 - Do not bypass failing checks.
 - Use conventional commits.

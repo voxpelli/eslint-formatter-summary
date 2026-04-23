@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import renderComment, { renderAllPass } from '../lib/cli/render-comment.js';
+import { renderComment, renderSuccess } from '../lib/cli/render-comment.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 
@@ -21,18 +21,18 @@ const make = (overrides = {}) => ({
 });
 
 test('renderAllPass renders the "all N pass" body with the given count', () => {
-  const out = renderAllPass(7);
+  const out = renderSuccess(7);
   assert.match(out, /^## External project test results\n\n/);
   assert.match(out, /✅ All 7 external projects pass\n$/);
 });
 
 test('renderAllPass falls back to "?" when count is undefined', () => {
-  assert.match(renderAllPass(), /All \? external projects pass/);
+  assert.match(renderSuccess(), /All \? external projects pass/);
 });
 
 test('renderAllPass falls back to "?" when count is zero or negative', () => {
-  assert.match(renderAllPass(0), /All \? external projects pass/);
-  assert.match(renderAllPass(-3), /All \? external projects pass/);
+  assert.match(renderSuccess(0), /All \? external projects pass/);
+  assert.match(renderSuccess(-3), /All \? external projects pass/);
 });
 
 test('renderComment sums errors, warnings, and fixable across projects', () => {

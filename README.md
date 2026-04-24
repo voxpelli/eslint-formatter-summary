@@ -16,6 +16,7 @@ Fork of [mhipszki/eslint-formatter-summary](https://github.com/mhipszki/eslint-f
 - aggregated errors / warnings / fixable count **per rule**
 - **sort by** rule name, number of errors or warnings
 - output as **markdown table** or **CSV**
+- **`eslint-summary` CLI** for fan-in aggregation across many projects (see [CLI](#cli))
 
 ## TL;DR
 
@@ -26,7 +27,7 @@ This formatter simply aggregates the ESLint results _by rule_ and shows the foll
 It can also be configured to sort results by rule, errors or warnings using env vars e.g.
 
 ```shell
-EFS_SORT_BY=rule EFS_SORT_DESC=true eslint -f @voxpelli/eslint-formatter-summary ./src
+EFS_SORT_BY=rule EFS_SORT_REVERSE=true eslint -f @voxpelli/eslint-formatter-summary ./src
 ```
 
 (see details below).
@@ -141,8 +142,96 @@ errors,warnings,fixable,rule
 When running under GitHub Actions, the formatter automatically appends its markdown output to [`$GITHUB_STEP_SUMMARY`](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#adding-a-job-summary), so failing rules surface on the job summary page. This happens regardless of `EFS_OUTPUT` — stdout still uses whatever format you configured.
 
 - Skipped when the run is clean (no errors and no warnings).
-- Opt out with `EFS_GITHUB_STEP_SUMMARY=false` (or `0`) — useful for jobs that should only emit the formatter's stdout.
+- Opt out with `EFS_SKIP_GH_SUMMARY=true` — useful for jobs that should only emit the formatter's stdout.
 - If the write fails (e.g. read-only path), a warning is logged to stderr but the lint run continues.
+
+### Sticky PR comment (size caps)
+
+By default the formatter emits **uncapped** markdown. That's the right shape for a local terminal, a file redirect, or `$GITHUB_STEP_SUMMARY` (which has ~1 MB of headroom). But posting into a PR sticky comment is more constrained — GitHub caps comments at ~65 KB, and a noisy project can blow past that.
+
+Set `EFS_CAP=true` to opt into capped output. When set:
+
+- Per-rule file lists are capped (default 50 entries, overridable with `EFS_FILE_CAP`); overflow collapses into `… and N more`.
+- Total output is capped by bytes (default 60 000, overridable with `EFS_SIZE_CAP`); the output is truncated at the last complete table row and a trailer is appended.
+- `$GITHUB_STEP_SUMMARY` is **still written uncapped**, so the step-summary page has the full report while the stdout (typically fed into a sticky-comment action) stays under budget.
+
+The markdown output is portable — it uses Unicode emoji (🔧 / ✅) and Unicode em-dash rather than GitHub-only `:wrench:` / `&mdash;` shortcodes, so it renders identically on GitLab, Bitbucket, Gitea, Slack, email, and plain-Markdown viewers. (The CLI aggregate path emits GitHub-specific `blob/HEAD/<path>#L<line>` anchors for clickable file references; on other forges those fall back to plain text.)
+
+### Environment variables
+
+| Variable | Default | Effect |
+| --- | --- | --- |
+| `EFS_OUTPUT` | (CLI colored) | `markdown` or `csv` to change stdout format |
+| `EFS_SORT_BY` | `errors` | `rule` / `errors` / `warnings` |
+| `EFS_SORT_REVERSE` | `false` | `true` reverses the sort |
+| `EFS_CAP` | unset | Truthy (`true`/`1`/`yes`) enables sticky-comment sizing caps |
+| `EFS_FILE_CAP` | `50` | Per-rule file-entry cap when `EFS_CAP` is on |
+| `EFS_SIZE_CAP` | `60000` | Total byte cap when `EFS_CAP` is on |
+| `EFS_SKIP_GH_SUMMARY` | unset | Truthy skips the `$GITHUB_STEP_SUMMARY` append |
+| `GITHUB_STEP_SUMMARY` | unset | When set (and not skipped), formatter appends uncapped markdown here |
+
+## CLI
+
+The package also ships an `eslint-summary` CLI, intended for fan-in scenarios where many projects are linted separately (e.g. a matrix GitHub Actions workflow) and the individual runs need to be aggregated into one sticky PR comment or one job summary.
+
+Two subcommands:
+
+### `eslint-summary prepare [input-file]`
+
+Reduces one project's raw `eslint --format json` output into an intermediate `ProjectResult` JSON blob. Reads from `<input-file>` or from stdin when no positional is given.
+
+```shell
+# From a file
+eslint-summary prepare --project owner/repo project/eslint-results.json > result.json
+
+# Piped
+eslint --format json | eslint-summary prepare --project owner/repo > result.json
+```
+
+Flags: `--project <owner/repo>` (or env `EFS_PROJECT_NAME`), `--out <path>` (default `-` = stdout), `--cwd <path>` (strip-prefix for relative file paths).
+
+### `eslint-summary aggregate <results-dir>`
+
+Fans N `ProjectResult` JSON files (one per subdirectory) into a sticky-PR-comment markdown document.
+
+```shell
+# Write a capped comment body for sticky-PR-comment posting
+eslint-summary aggregate --project-count 25 --out comment.md results/
+
+# Uncapped output to the GitHub Actions job summary
+eslint-summary aggregate --full results/ >> "$GITHUB_STEP_SUMMARY"
+```
+
+Flags: `--full` (uncapped markdown), `--project-count <n>` (for "all N pass" message; env `EXTERNAL_PROJECT_COUNT`), `--out <path>`, `--sort-by <project|severity>`, `--size-cap <bytes>` (default 60000; env `EFS_SIZE_CAP`), `--file-cap <n>` (per-rule file-entry cap, default 50).
+
+### Defensive sanitization
+
+Rule ids, file paths, and message details rendered into markdown output (both CLI and formatter paths) pass through a sanitization layer that:
+
+- Strips bidi / zero-width control codepoints (defense against trojan-source rendering).
+- Scrubs substrings matching known secret shapes (`ghp_…` / `ghs_…` / `ghu_…` / `npm_…` / AWS `AKIA…` / PEM block headers) with `[REDACTED]`.
+- Caps string length so a pathological rule name cannot distort the rendered table.
+
+This is defense-in-depth: a misbehaving ESLint plugin or an attacker-authored fork PR (in a canary / fleet-lint setup) should not be able to echo tokens back via the PR sticky comment or the Actions job summary. The CSV branch is unaffected (machine output) and the terminal-colored branch is unaffected (no HTML rendering surface).
+
+## GitHub Actions delivery
+
+`eslint-summary` produces markdown; it does not post PR comments. Compose its output with a dedicated sticky-comment action. The canonical pattern uses [`marocchino/sticky-pull-request-comment`](https://github.com/marocchino/sticky-pull-request-comment):
+
+```yaml
+- name: Aggregate ESLint results across projects
+  run: |
+    eslint-summary aggregate --out comment.md results/
+
+- name: Post or update the sticky PR comment
+  if: github.event_name == 'pull_request'
+  uses: marocchino/sticky-pull-request-comment@v2
+  with:
+    header: eslint-summary
+    path: comment.md
+```
+
+For per-line inline review comments, use [`reviewdog/action-eslint`](https://github.com/reviewdog/action-eslint) with ESLint's native format — that's a complementary path, not an overlap. `eslint-summary` handles the fleet-level aggregation and byte-capped sticky comment; reviewdog handles per-location annotations.
 
 ## Contribute
 

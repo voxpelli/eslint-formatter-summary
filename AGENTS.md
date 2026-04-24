@@ -1,0 +1,92 @@
+# AGENTS.md
+
+GitHub Copilot instructions for `@voxpelli/eslint-formatter-summary`.
+
+For full project context and usage details, see [`README.md`](./README.md).
+
+## Project at a glance
+
+- ESLint formatter that aggregates lint results by rule
+- Output modes: CLI (chalk), markdown-table, CSV
+- Includes `eslint-summary` CLI with `prepare` + `aggregate` subcommands
+- Peer dep: ESLint `>=9.13.0` (flat configs)
+- Node: `^22.13.0 || >=24.0.0`
+
+## High-signal commands
+
+Run these after code changes:
+
+- `npm run check` — lint + type + knip + installed-check + type-coverage
+- `npm run test:node` — unit tests with coverage
+- `npm run test:real-world` — self-host formatter on `lib/`
+- `npm test` — full check + tests (preferred before finalizing)
+
+Default scripts use compact output on purpose (`dot` reporter, `--skip-full` coverage, no type-coverage detail) to keep logs and agent context lean.
+
+When you need more detail to diagnose a failure:
+
+```sh
+# Full TAP output (see which specific test failed and why)
+npx c8 node --test --test-reporter spec 'test/**/*.spec.js'
+
+# Per-file coverage table (find which files lack coverage)
+npx c8 report --reporter=text
+
+# Type-coverage with every uncovered identifier listed
+npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
+```
+
+## Architecture constraints
+
+- `index.cjs` is the required CJS entrypoint for ESLint formatter loading (`require` contract).
+- `lib/*.js` and `lib/cli/*.js` are ESM modules.
+- Keep the two-layer model:
+  - entrypoint/env orchestration in `index.cjs`
+  - implementation in `lib/`
+- Keep CLI-only shared concerns in `lib/cli/` rather than `lib/utils/`. When multiple commands share a peowly flag plus the logic that interprets it, co-locate them in one CLI module (for example `lib/cli/output.js` exports both `outputFlags` and `writeOutput()`).
+- Reserve `lib/utils/` for helpers reused outside the CLI command layer.
+- Aggregation pipeline lives in `lib/`:
+  - message extraction/classification → aggregation → sorting → output formatting
+
+## Code conventions
+
+- Use ESM syntax in `lib/` (do not add CommonJS there)
+- Keep `index.cjs` as the sole CommonJS file
+- CLI command modules in `lib/cli/` use named exports (`cmdPrepare`, `cmdAggregate`); avoid default exports for new or refactored command modules
+- Shared peowly flag groups should be spread into command `options` objects instead of duplicated inline.
+- CLI parsers should destructure `cli.input` and validate remainder positionals before use (for example `[inputPath = '', ...remainingInput]`).
+- String-backed numeric CLI flags should be parsed through `parseNumericFlag()` in `lib/cli/coerce.js` until peowly grows native number flags.
+- When validating unknown JSON/object shapes with `@voxpelli/typed-utils`, prefer progressive guards like `isObjectWithKey()`, `isObject()`, and `isOptionalKeyWithType()` over `Record<string, unknown>` casts.
+- Follow neostandard style via `@voxpelli/eslint-config`
+- Types are JSDoc-annotated and validated by `tsc` (no compile step)
+- Keep type coverage expectations high (`type-coverage` target: 99%)
+- JSDoc style:
+  - symbol links: `{@link symbol}`
+  - URL links: `{@link https://example.com|Label}`
+  - avoid relative-path links in JSDoc
+- Type-only imports should use JSDoc `@import` blocks after runtime imports
+
+## Security and output handling
+
+- Sanitization (`lib/sanitize-untrusted.js`) is intentionally applied to markdown/HTML-like render paths.
+- Do not add sanitization to CSV or chalk terminal branches unless requirements change.
+- Preserve GitHub step-summary behavior in `index.cjs` (`GITHUB_STEP_SUMMARY` integration).
+
+## Change guardrails
+
+- Keep changes minimal and targeted; avoid broad refactors unless requested.
+- For review-driven edits, inspect the active git diff first and align with the existing branch intent before touching adjacent code.
+- Add/update tests when behavior changes.
+- For `lib/cli/` changes, prefer exercising the real executable through helpers in `test/_helpers.js` (`runCli()`, `makeTmpDir()`, `writeResultArtifact()`) rather than only unit-testing internals.
+- For export/rename refactors, use symbol/reference lookup before editing imports manually.
+- When requirements are ambiguous or policy-sensitive, ask 1-3 focused clarifying questions early (prefer selectable options, allow freeform for constraints).
+- If ambiguity is non-blocking, proceed with a clearly stated assumption and continue; don't stall the task.
+- Before finalizing, re-check the git diff to confirm no accidental churn or unrelated formatting edits.
+- Do not bypass failing checks.
+- Use conventional commits.
+- Do not use GPG signing when committing.
+
+## Pointers for deeper details
+
+- User-facing feature docs and CLI usage: [`README.md`](./README.md)
+- Package scripts and runtime constraints: [`package.json`](./package.json)

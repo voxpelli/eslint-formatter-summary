@@ -16,3 +16,7 @@ yarn-error.log
 
 # Local agent / assistant state
 CLAUDE.md
+/.sem
+
+# Local synergy-tracker files (project-private)
+SYNERGY-*.md

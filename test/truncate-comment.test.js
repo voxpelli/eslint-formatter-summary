@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import truncateComment from '../lib/cli/truncate-comment.js';
+import { truncateComment } from '../lib/cli/truncate-comment.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 

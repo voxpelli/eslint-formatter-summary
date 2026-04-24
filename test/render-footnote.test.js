@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import renderFootnote from '../lib/cli/render-footnote.js';
+import { renderFootnote } from '../lib/cli/render-footnote.js';
 import { SYNTHETIC_FOOTNOTE_TEXT } from '../lib/synthetic-footnote-text.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */

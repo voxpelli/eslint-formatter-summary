@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import prepareProjectResult from '../lib/cli/prepare-project-result.js';
+import { prepareProjectResult } from '../lib/cli/prepare-project-result.js';
 
 /** @import { LintResultLite } from '../lib/cli/prepare-project-result.js' */
 

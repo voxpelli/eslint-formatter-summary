@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import renderProjectBlock from '../lib/cli/render-project-block.js';
+import { renderProjectBlock } from '../lib/cli/render-project-block.js';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
 

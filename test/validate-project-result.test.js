@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import isValidProjectResult from '../lib/cli/validate-project-result.js';
+import { isValidProjectResult } from '../lib/cli/validate-project-result.js';
 
 test('accepts a minimal valid shape', () => {
   assert.equal(isValidProjectResult({ project: 'a/b', rules: {}, syntheticKeys: [] }), true);

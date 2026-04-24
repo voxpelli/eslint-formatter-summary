@@ -46,36 +46,33 @@ test('caps length and appends ellipsis', () => {
   const result = sanitizeUntrusted(long, { maxLength: 50 });
   assert.equal(result.length, 51);
   assert.ok(result.endsWith('…'));
+  // Pin the slice direction — a regression that truncated from the end
+  // would keep the last 50 xs and still produce a 50+… string.
+  assert.ok(result.startsWith('x'.repeat(50)));
 });
 
-test('is idempotent', () => {
-  const input = 'foo ghp_' + 'A'.repeat(40) + ' bar';
-  assert.equal(sanitizeUntrusted(sanitizeUntrusted(input)), sanitizeUntrusted(input));
-});
-
-test('default length cap is 200', () => {
+test('default length cap is 200, with prefix preservation', () => {
   const long = 'y'.repeat(250);
   const result = sanitizeUntrusted(long);
   assert.equal(result.length, 201);
-});
-
-test('collapses embedded newline to a single space', () => {
-  assert.equal(sanitizeUntrusted('rule\nid'), 'rule id');
-});
-
-test('collapses embedded tab to a single space', () => {
-  assert.equal(sanitizeUntrusted('rule\tid'), 'rule id');
+  assert.ok(result.endsWith('…'));
+  assert.ok(result.startsWith('y'.repeat(200)));
 });
 
 test('collapses CR-LF sequence to a single space', () => {
+  // \r is a distinct character class from \n/\t — keep this case separately.
   assert.equal(sanitizeUntrusted('a\r\nb'), 'a b');
 });
 
 test('collapses mixed consecutive whitespace to a single space', () => {
+  // Mixed fixture covers \n, \t, and consecutive runs in one assertion.
   assert.equal(sanitizeUntrusted('a\n\n\tb'), 'a b');
 });
 
-test('is idempotent after whitespace collapse', () => {
-  const input = 'foo\nbar\tbaz\r\nqux';
+test('is idempotent after whitespace collapse + secret scrub', () => {
+  // Mixed fixture exercises both the whitespace collapse regex and the
+  // secret-scrub replaceAll — a regression in either that produced a
+  // non-stable second pass would fail here.
+  const input = 'foo\nbar ghp_' + 'A'.repeat(40) + '\tbaz\r\nqux';
   assert.equal(sanitizeUntrusted(sanitizeUntrusted(input)), sanitizeUntrusted(input));
 });

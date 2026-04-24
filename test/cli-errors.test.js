@@ -3,8 +3,9 @@ import test from 'node:test';
 
 import { cmdAggregate } from '../lib/cli/cmd-aggregate.js';
 import { cmdPrepare } from '../lib/cli/cmd-prepare.js';
-import { parseNumericFlag } from '../lib/cli/coerce.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
+
+// `parseNumericFlag` unit tests live in test/coerce.test.js — do not duplicate.
 
 const parentName = 'eslint-summary';
 const meta = /** @type {import('peowly-commands').CliMeta} */ ({ name: parentName });
@@ -40,42 +41,6 @@ test('isErrorWithCode: false for non-Error', () => {
   assert.equal(isErrorWithCode('nope'), false);
   // eslint-disable-next-line unicorn/no-null -- testing the null branch
   assert.equal(isErrorWithCode(null), false);
-});
-
-test('parseNumericFlag: returns undefined for empty input', () => {
-  assert.equal(parseNumericFlag('', '--size-cap'), undefined);
-});
-
-test('parseNumericFlag: parses valid positive integer', () => {
-  assert.equal(parseNumericFlag('42', '--size-cap'), 42);
-});
-
-test('parseNumericFlag: throws InputError for non-numeric', () => {
-  assert.throws(
-    () => parseNumericFlag('abc', '--size-cap'),
-    (err) => err instanceof InputError && /--size-cap must be a positive integer/.test(err.message)
-  );
-});
-
-test('parseNumericFlag: throws InputError for zero', () => {
-  assert.throws(
-    () => parseNumericFlag('0', '--size-cap'),
-    InputError
-  );
-});
-
-test('parseNumericFlag: throws InputError for negative', () => {
-  assert.throws(
-    () => parseNumericFlag('-5', '--size-cap'),
-    InputError
-  );
-});
-
-test('parseNumericFlag: throws InputError for fractional', () => {
-  assert.throws(
-    () => parseNumericFlag('1.5', '--file-cap'),
-    InputError
-  );
 });
 
 test('cmd-aggregate run: rejects with InputError when no positional given', async () => {

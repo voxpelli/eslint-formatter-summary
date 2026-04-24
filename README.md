@@ -27,7 +27,7 @@ This formatter simply aggregates the ESLint results _by rule_ and shows the foll
 It can also be configured to sort results by rule, errors or warnings using env vars e.g.
 
 ```shell
-EFS_SORT_BY=rule EFS_SORT_DESC=true eslint -f @voxpelli/eslint-formatter-summary ./src
+EFS_SORT_BY=rule EFS_SORT_REVERSE=true eslint -f @voxpelli/eslint-formatter-summary ./src
 ```
 
 (see details below).
@@ -213,6 +213,25 @@ Rule ids, file paths, and message details rendered into markdown output (both CL
 - Caps string length so a pathological rule name cannot distort the rendered table.
 
 This is defense-in-depth: a misbehaving ESLint plugin or an attacker-authored fork PR (in a canary / fleet-lint setup) should not be able to echo tokens back via the PR sticky comment or the Actions job summary. The CSV branch is unaffected (machine output) and the terminal-colored branch is unaffected (no HTML rendering surface).
+
+## GitHub Actions delivery
+
+`eslint-summary` produces markdown; it does not post PR comments. Compose its output with a dedicated sticky-comment action. The canonical pattern uses [`marocchino/sticky-pull-request-comment`](https://github.com/marocchino/sticky-pull-request-comment):
+
+```yaml
+- name: Aggregate ESLint results across projects
+  run: |
+    eslint-summary aggregate --out comment.md results/
+
+- name: Post or update the sticky PR comment
+  if: github.event_name == 'pull_request'
+  uses: marocchino/sticky-pull-request-comment@v2
+  with:
+    header: eslint-summary
+    path: comment.md
+```
+
+For per-line inline review comments, use [`reviewdog/action-eslint`](https://github.com/reviewdog/action-eslint) with ESLint's native format — that's a complementary path, not an overlap. `eslint-summary` handles the fleet-level aggregation and byte-capped sticky comment; reviewdog handles per-location annotations.
 
 ## Contribute
 

@@ -3,19 +3,9 @@ import test from 'node:test';
 
 import { renderFootnote } from '../lib/cli/render-footnote.js';
 import { SYNTHETIC_FOOTNOTE_TEXT } from '../lib/synthetic-footnote-text.js';
+import { makeProjectResult } from './_helpers.js';
 
-/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
-
-/** @type {ProjectResult} */
-const base = {
-  project: 'owner/repo',
-  errorCount: 0,
-  warningCount: 0,
-  fixableErrorCount: 0,
-  fixableWarningCount: 0,
-  syntheticKeys: [],
-  rules: {},
-};
+const base = makeProjectResult({ project: 'owner/repo' });
 
 test('renderFootnote returns empty string when no synthetic keys present', () => {
   assert.equal(renderFootnote([{ ...base, syntheticKeys: [] }]), '');

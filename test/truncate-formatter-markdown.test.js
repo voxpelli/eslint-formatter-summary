@@ -43,7 +43,13 @@ test('truncateFormatterMarkdown clamps gracefully when sizeCap is below HEADROOM
   const rows = Array.from({ length: 3 }, (_, i) => makeRow(i, 'padding '.repeat(500))).join('');
   const md = header + rows;
   const out = truncateFormatterMarkdown(md, 3, { sizeCap: 300 });
-  assert.ok(Buffer.byteLength(out, 'utf8') <= 2_000, 'output must not balloon');
+  // Slice budget clamps to 0 when sizeCap < HEADROOM, so the output is just
+  // the trailer (~50 bytes). The old `<= 2_000` was 7× over — a balloon
+  // regression would pass; tighten to catch it.
+  assert.ok(
+    Buffer.byteLength(out, 'utf8') <= 500,
+    `output must fit close to the trailer size (got ${Buffer.byteLength(out, 'utf8')})`
+  );
   assert.match(out, /rule rows truncated/);
 });
 

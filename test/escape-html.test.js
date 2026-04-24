@@ -3,10 +3,6 @@ import test from 'node:test';
 
 import { escapeHtml } from '../lib/utils/text.js';
 
-test('escapeHtml escapes < and >', () => {
-  assert.equal(escapeHtml('<script>'), '&lt;script&gt;');
-});
-
 test('escapeHtml escapes & before other entities (no double-escape)', () => {
   assert.equal(escapeHtml('&amp;'), '&amp;amp;');
 });

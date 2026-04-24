@@ -2,23 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { renderComment, renderSuccess } from '../lib/cli/render-comment.js';
-
-/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
-
-/**
- * @param {Record<string, unknown>} overrides
- * @returns {ProjectResult}
- */
-const make = (overrides = {}) => ({
-  project: 'owner/repo',
-  errorCount: 0,
-  warningCount: 0,
-  fixableErrorCount: 0,
-  fixableWarningCount: 0,
-  syntheticKeys: [],
-  rules: {},
-  ...overrides,
-});
+import { makeProjectResult as make } from './_helpers.js';
 
 test('renderAllPass renders the "all N pass" body with the given count', () => {
   const out = renderSuccess(7);
@@ -26,15 +10,12 @@ test('renderAllPass renders the "all N pass" body with the given count', () => {
   assert.match(out, /✅ All 7 external projects pass\n$/);
 });
 
-test('renderAllPass falls back to "?" when count is undefined', () => {
-  // @ts-expect-error -- exercising the omitted-argument runtime fallback branch
-  assert.match(renderSuccess(), /All \? external projects pass/);
-});
-
-test('renderAllPass falls back to "?" when count is zero or negative', () => {
-  assert.match(renderSuccess(0), /All \? external projects pass/);
-  assert.match(renderSuccess(-3), /All \? external projects pass/);
-});
+// Parameterised: every non-positive / undefined count falls back to '?'.
+for (const count of /** @type {Array<number | undefined>} */ ([undefined, 0, -3])) {
+  test(`renderAllPass falls back to "?" when count is ${String(count)}`, () => {
+    assert.match(renderSuccess(count), /All \? external projects pass/);
+  });
+}
 
 test('renderComment sums errors, warnings, and fixable across projects', () => {
   // Distinct totals per axis so a mixed-up error/warning assertion cannot
@@ -77,21 +58,15 @@ test('renderComment omits error/warning clauses when counts are zero', () => {
   assert.doesNotMatch(out, /\*\*, /);
 });
 
-test('renderComment preserves the caller-supplied project order', () => {
+test('renderComment preserves the caller-supplied project order and emits one <details> per project', () => {
   const out = renderComment([
     make({ project: 'owner/zeta', errorCount: 1, rules: { r: { errors: 1, warnings: 0, fixable: 0, files: ['z.js:1'] } } }),
     make({ project: 'owner/alpha', errorCount: 1, rules: { r: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } } }),
   ]);
   assert.ok(out.indexOf('owner/zeta') < out.indexOf('owner/alpha'));
-});
-
-test('renderComment emits one <details> block per project', () => {
-  const out = renderComment([
-    make({ project: 'owner/a', errorCount: 1, rules: { r: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } } }),
-    make({ project: 'owner/b', errorCount: 1, rules: { r: { errors: 1, warnings: 0, fixable: 0, files: ['b.js:1'] } } }),
-  ]);
-  const openings = out.match(/<details>\n<summary>/g) ?? [];
-  assert.equal(openings.length, 2);
+  // Pin the 1-project-per-block invariant — a regression that collapsed
+  // projects into one block or nested them would pass the index check above.
+  assert.equal((out.match(/<details>\n<summary>/g) ?? []).length, 2);
 });
 
 test('renderComment renders the synthetic-key footnote when keys are present', () => {

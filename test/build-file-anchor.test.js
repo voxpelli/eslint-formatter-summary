@@ -79,3 +79,30 @@ test('renderFileSpan preserves :line suffix when path triggers length cap', () =
   assert.ok(out.includes(':42</code>'), 'line suffix must survive truncation');
   assert.ok(out.includes('…'), 'truncation ellipsis should appear inside the path');
 });
+
+test('renderFileSpan rejects `..` segments — no href escapes the repo', () => {
+  // encodeURIComponent('..') returns '..', so a tampered path like
+  // ../../etc/passwd would survive into the href and (after browser URL
+  // normalisation) point outside the intended repo.
+  const out = renderFileSpan('../../etc/passwd:1', 'owner/repo');
+  assert.doesNotMatch(out, /<a /, 'no anchor — must fall back to plain code');
+  assert.ok(out.includes('<code>'), 'plain-code span expected');
+  assert.ok(out.includes('..'), 'the raw path still renders (but sanitized, no href)');
+});
+
+test('renderFileSpan rejects single `..` segment in the middle of a path', () => {
+  const out = renderFileSpan('src/../secret:1', 'owner/repo');
+  assert.doesNotMatch(out, /href=/);
+});
+
+test('renderProjectLabel rejects long-but-valid-shape slugs that trigger sanitize truncation', () => {
+  // A slug that passes SLUG_SHAPE but is long enough for sanitizeUntrusted to
+  // lop into `owner/very-lo…`. Without the idempotent-sanitize gate, the
+  // `<a href="https://github.com/owner/very-lo…">` link would point at a
+  // broken GitHub URL and silently corrupt attacker-controlled content.
+  const longSlug = 'owner/' + 'x'.repeat(500);
+  const out = renderProjectLabel(longSlug);
+  assert.doesNotMatch(out, /<a /, 'no anchor when sanitize would truncate');
+  assert.ok(out.includes('<code>'));
+  assert.ok(out.includes('…'));
+});

@@ -75,9 +75,13 @@ npx type-coverage --detail --strict --at-least 99 --ignore-files 'test/*'
 ## Change guardrails
 
 - Keep changes minimal and targeted; avoid broad refactors unless requested.
+- For review-driven edits, inspect the active git diff first and align with the existing branch intent before touching adjacent code.
 - Add/update tests when behavior changes.
 - For `lib/cli/` changes, prefer exercising the real executable through helpers in `test/_helpers.js` (`runCli()`, `makeTmpDir()`, `writeResultArtifact()`) rather than only unit-testing internals.
 - For export/rename refactors, use symbol/reference lookup before editing imports manually.
+- When requirements are ambiguous or policy-sensitive, ask 1-3 focused clarifying questions early (prefer selectable options, allow freeform for constraints).
+- If ambiguity is non-blocking, proceed with a clearly stated assumption and continue; don't stall the task.
+- Before finalizing, re-check the git diff to confirm no accidental churn or unrelated formatting edits.
 - Do not bypass failing checks.
 - Use conventional commits.
 - Do not use GPG signing when committing.

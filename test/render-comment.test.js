@@ -71,6 +71,10 @@ test('renderComment omits error/warning clauses when counts are zero', () => {
   ]);
   assert.doesNotMatch(out, /errors \(\d+ fixable\)/);
   assert.match(out, /2 warnings \(1 fixable\)/);
+  // Warnings-only fleets must introduce the clause with ` — `, not a bare
+  // `, ` that would dangle off the bold header tag.
+  assert.match(out, / — 2 warnings \(1 fixable\)/);
+  assert.doesNotMatch(out, /\*\*, /);
 });
 
 test('renderComment preserves the caller-supplied project order', () => {

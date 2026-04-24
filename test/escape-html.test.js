@@ -29,3 +29,10 @@ test('escapeHtml strips bidi controls before escaping', () => {
 test('escapeHtml on empty string returns empty string', () => {
   assert.equal(escapeHtml(''), '');
 });
+
+test('escapeHtml encodes `|` so a table-cell delimiter cannot be injected', () => {
+  // GFM tokenizes `|` before inline HTML parses, so a literal pipe inside
+  // `<code>` inside a pipe-table cell would still split the row. Encoding
+  // to `&#124;` renders visually as `|` without breaking table structure.
+  assert.equal(escapeHtml('evil|rule'), 'evil&#124;rule');
+});

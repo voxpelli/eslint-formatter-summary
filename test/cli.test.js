@@ -381,12 +381,20 @@ test('aggregate: --full emits uncapped markdown (no tail-summary trailer)', asyn
         rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: Array.from({ length: 200 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
       });
     }
-    const { code, stdout } = await runCli(['aggregate', '--full', '--size-cap', '20000', '--file-cap', '200', results]);
+    // Do NOT pass --file-cap — the fixture builds 200 files/rule; if --full
+    // does not bypass the default cap=50, the `… and 150 more` overflow
+    // trailer appears and the last 150 entries per rule are silently dropped.
+    const { code, stdout } = await runCli(['aggregate', '--full', '--size-cap', '20000', results]);
     assert.equal(code, 0);
     assert.doesNotMatch(stdout, /<summary>Tail projects/);
     assert.doesNotMatch(stdout, /file:line detail truncated/);
+    assert.doesNotMatch(stdout, /… and \d+ more/, '--full must not emit the per-rule file-cap overflow trailer');
     // All five projects should appear in full
     for (let i = 0; i < 5; i++) assert.match(stdout, new RegExp(`acme/proj-${i}`));
+    // Every file entry from the fixture (200 per rule × 5 projects = 1000 anchors).
+    for (const j of [0, 49, 50, 100, 199]) {
+      assert.match(stdout, new RegExp(`src/a-${j}\\.js:${j + 1}`), `file index ${j} must appear under --full`);
+    }
   } finally {
     await cleanup();
   }

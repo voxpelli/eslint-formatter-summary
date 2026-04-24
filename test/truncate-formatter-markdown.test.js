@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import truncateFormatterMarkdown from '../lib/truncate-formatter-markdown.js';
+import { truncateFormatterMarkdown } from '../lib/truncate-formatter-markdown.js';
 
 const header = '| Errors | Warnings | Fixable | Rule |\n| ------ | -------- | ------- | ---- |\n';
 

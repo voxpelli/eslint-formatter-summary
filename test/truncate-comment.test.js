@@ -63,6 +63,19 @@ test('truncateComment appends the step-summary trailer', () => {
   assert.match(out, /file:line detail truncated for tail projects/);
 });
 
+test('truncateComment keeps <details> tags balanced when first block exceeds slice window', () => {
+  // Regression: the lastClose === -1 branch previously set keptMd = slice,
+  // leaving an unclosed `<details>` that the tail summary's own `</details>`
+  // would absorb — visually nesting the tail table inside proj-0.
+  const fatBlock = '<details>\n<summary>owner/proj-0</summary>\n\n' +
+    'x'.repeat(20_000) + '\n</details>\n\n';
+  const results = [makeProject(0)];
+  const out = truncateComment(fatBlock, results, { sizeCap: 18_000 });
+  const opens = (out.match(/<details[\s>]/g) ?? []).length;
+  const closes = (out.match(/<\/details>/g) ?? []).length;
+  assert.equal(opens, closes, 'every <details> must have a matching </details>');
+});
+
 test('truncateComment handles case where the first block exceeds the slice window', () => {
   // Build a fixture that is larger than sizeCap so truncation actually runs,
   // and where the first block alone is larger than `sizeCap - HEADROOM` so

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import classifyMessage from '../lib/classify-message.js';
+import { classifyMessage } from '../lib/classify-message.js';
 
 test('branch 1: fatal=true is classified as (parser error)', () => {
   assert.deepEqual(

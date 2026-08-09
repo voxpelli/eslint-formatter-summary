@@ -21,6 +21,7 @@ test('writeStepSummary appends content + newline to a writable path', async () =
   try {
     const file = path.join(dir, 'step-summary.md');
     await writeStepSummary(file, '## hello');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is a constant basename inside the test's own mkdtemp dir, never untrusted input
     assert.equal(await readFile(file, 'utf8'), '## hello\n');
   } finally {
     await cleanup();
@@ -31,8 +32,10 @@ test('writeStepSummary preserves existing content (append semantics)', async () 
   const { cleanup, dir } = await makeTmp();
   try {
     const file = path.join(dir, 'step-summary.md');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is a constant basename inside the test's own mkdtemp dir, never untrusted input
     await writeFile(file, 'pre-existing\n', 'utf8');
     await writeStepSummary(file, 'appended');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is a constant basename inside the test's own mkdtemp dir, never untrusted input
     assert.equal(await readFile(file, 'utf8'), 'pre-existing\nappended\n');
   } finally {
     await cleanup();
@@ -91,6 +94,7 @@ test('writeStepSummary creates the file if it does not exist', async () => {
     const file = path.join(dir, 'fresh.md');
     // Don't pre-create file — appendFile should.
     await writeStepSummary(file, 'first-content');
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is a constant basename inside the test's own mkdtemp dir, never untrusted input
     assert.equal(await readFile(file, 'utf8'), 'first-content\n');
   } finally {
     await cleanup();

@@ -115,7 +115,7 @@ test('index.cjs: EFS_CAP unset leaves markdown uncapped (file list intact)', asy
 });
 
 test('index.cjs: EFS_CAP=true applies default file cap (50)', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true', GITHUB_STEP_SUMMARY: undefined });
+  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true', EFS_FILE_CAP: undefined, GITHUB_STEP_SUMMARY: undefined });
   const out = await formatter(lintFixture(120), context);
   assert.match(out, /… and 70 more/, 'overflow trailer should show 120-50=70');
   assert.ok(!out.includes('f119.js'), 'files past the cap should not render');

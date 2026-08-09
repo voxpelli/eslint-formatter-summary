@@ -32,6 +32,14 @@ test('scrubs fine-grained GitHub PATs (documented 22+1+59 shape)', () => {
   assert.equal(sanitizeUntrusted(`token=${token}`), 'token=[REDACTED]');
 });
 
+test('scrubs stateless GitHub App installation tokens (ghs_<appID>_<JWT>)', () => {
+  // Three-segment base64url JWT — the second underscore and the dots break
+  // the legacy `gh[oprs]_[A-Za-z0-9]{36,}` shape, so the stateless pattern
+  // must catch the full token.
+  const token = 'ghs_123456_eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiIxMjM0NTYifQ.abcDEF_-0123456789';
+  assert.equal(sanitizeUntrusted(`token=${token}`), 'token=[REDACTED]');
+});
+
 test('scrubs npm tokens', () => {
   const token = 'npm_' + 'z'.repeat(40);
   assert.equal(sanitizeUntrusted(`NPM_TOKEN=${token}`), 'NPM_TOKEN=[REDACTED]');

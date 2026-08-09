@@ -56,6 +56,8 @@ for (const [label, input] of /** @type {Array<[string, unknown]>} */ ([
   ['bucket null', { project: 'a/b', rules: { 'no-undef': null } }],
   ['bucket files non-array', { project: 'a/b', rules: { 'no-undef': { files: 'a.js:1' } } }],
   ['bucket missing files', { project: 'a/b', rules: { 'no-undef': { errors: 1 } } }],
+  ['bucket files non-string member', { project: 'a/b', rules: { 'no-undef': { files: [123] } } }],
+  ['syntheticKeys non-string member', { project: 'a/b', rules: {}, syntheticKeys: [42] }],
 ])) {
 /* eslint-enable unicorn/no-null */
   test(`rejects: ${label}`, () => {

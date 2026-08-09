@@ -179,11 +179,12 @@ test('aggregate: clean-run message sanitizes markup and control chars in --eslin
   const results = path.join(tmp, 'results');
   await mkdir(results, { recursive: true });
   const { code, stdout } = await runCli(
-    ['aggregate', '--project-count', '2', '--eslint-versions', '9.22,<b>10</b>', results]
+    ['aggregate', '--project-count', '2', '--eslint-versions', '9.22,<b>10</b>,\x1b[31m11\x1b[0m', results]
   );
   assert.equal(code, 0);
   assert.match(stdout, /&lt;b&gt;10&lt;\/b&gt;/, 'markup must be HTML-escaped');
   assert.doesNotMatch(stdout, /<b>10<\/b>/, 'no raw markup may reach the message');
+  assert.ok(!stdout.includes('\x1b'), 'no raw escape char may reach the message');
 });
 
 test('aggregate: --eslint-versions parsing handles single, spaced, and empty segments', async (t) => {
@@ -420,6 +421,21 @@ test('aggregate: warns with reason when an artifact has an invalid result shape'
   assert.equal(code, 0);
   assert.match(stdout, /acme\/good/, 'valid artifact must still render');
   assert.match(stderr, /skipped .*acme-shape.*eslint-result\.json \(invalid result shape\)/);
+});
+
+test('aggregate: exits 1 when all candidates are non-file paths (directories, symlinks)', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // Create a subdir whose eslint-result.json is itself a directory (not a
+  // file), which should count as a skipped candidate and trigger the
+  // AllSkippedError on 100% skip rate.
+  const subdir = path.join(results, 'proj-a');
+  const artifactPath = path.join(subdir, 'eslint-result.json');
+  await mkdir(artifactPath, { recursive: true });
+  const { code, stderr } = await runCli(['aggregate', results]);
+  assert.equal(code, 1);
+  assert.match(stderr, /Invalid input: all 1 candidate artifact\(s\) in .+ were skipped/);
+  assert.match(stderr, /skipped .*eslint-result\.json \(not a regular file\)/);
 });
 
 test('aggregate: exits 1 when results directory is missing (no silent all-pass)', async () => {

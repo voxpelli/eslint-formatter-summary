@@ -97,7 +97,7 @@ test('renderProjectBlock uses the Object.entries key, not a spoofed bucket.id', 
   const out = renderProjectBlock(make({
     errorCount: 1,
     rules: {
-      'real-id': { id: 'spoofed-id', errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] },
+      'real-id': /** @type {any} */ ({ id: 'spoofed-id', errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] }),
     },
   }));
   assert.ok(out.includes('<code>real-id</code>'), 'key should render in the Rule cell');

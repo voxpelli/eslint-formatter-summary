@@ -72,6 +72,27 @@ test('prepareProjectResult buckets parser errors into (parser error) with line e
   assert.deepEqual(result.rules['(parser error)']?.files, ['broken.js:1']);
 });
 
+test('prepareProjectResult keeps fatal messages that emit no line, using a ? placeholder', () => {
+  // Parity with the sibling tool's `msg.line ?? '?'` fallback: a fatal parse
+  // error can omit `line` entirely, and the message must still be bucketed
+  // rather than silently dropped.
+  const raw = /** @satisfies {LintResultLite[]} */ ([{
+    filePath: '/repo/broken.js',
+    errorCount: 1,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    messages: [
+      // eslint-disable-next-line unicorn/no-null
+      /** @type {any} */ ({ ruleId: null, severity: 2, fatal: true, column: 1, message: 'Parsing error: Unexpected token' }),
+    ],
+  }]);
+  const result = prepareProjectResult(raw, { baseDir });
+  assert.ok(result);
+  assert.deepEqual(result.syntheticKeys, ['(parser error)']);
+  assert.deepEqual(result.rules['(parser error)']?.files, ['broken.js:?']);
+});
+
 test('prepareProjectResult captures detail via \\t separator for unused-disable', () => {
   const raw = /** @satisfies {LintResultLite[]} */ ([{
     filePath: '/repo/a.js',

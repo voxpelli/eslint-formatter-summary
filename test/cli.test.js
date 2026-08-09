@@ -286,6 +286,41 @@ test('aggregate: warns per skipped candidate with path and reason while keeping 
   assert.doesNotMatch(stderr, /all \d+ candidate artifact\(s\).*were skipped/, 'aggregate warning only fires on 100% skip');
 });
 
+test('aggregate: warns with reason when an artifact is oversize (>5 MB)', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await writeOneProjectArtifact(results, {
+    project: 'acme/good',
+    errorCount: 1,
+    rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  });
+  const fatSubdir = path.join(results, 'acme-fat');
+  await mkdir(fatSubdir, { recursive: true });
+  await writeFile(path.join(fatSubdir, 'eslint-result.json'), 'x'.repeat(5 * 1024 * 1024 + 1), 'utf8');
+  const { code, stderr, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 0);
+  assert.match(stdout, /acme\/good/, 'valid artifact must still render');
+  assert.match(stderr, /skipped .*acme-fat.*eslint-result\.json \(oversize \(>5 MB\)\)/);
+});
+
+test('aggregate: warns with reason when an artifact has an invalid result shape', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await writeOneProjectArtifact(results, {
+    project: 'acme/good',
+    errorCount: 1,
+    rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  });
+  const badSubdir = path.join(results, 'acme-shape');
+  await mkdir(badSubdir, { recursive: true });
+  // Valid JSON but fails isValidProjectResult (project must be a string).
+  await writeFile(path.join(badSubdir, 'eslint-result.json'), JSON.stringify({ project: 123, rules: {} }), 'utf8');
+  const { code, stderr, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 0);
+  assert.match(stdout, /acme\/good/, 'valid artifact must still render');
+  assert.match(stderr, /skipped .*acme-shape.*eslint-result\.json \(invalid result shape\)/);
+});
+
 test('aggregate: exits 1 when results directory is missing (no silent all-pass)', async () => {
   const { code, stderr } = await runCli(['aggregate', '/definitely/does/not/exist']);
   assert.equal(code, 1);

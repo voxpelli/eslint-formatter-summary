@@ -106,6 +106,24 @@ test('truncateComment clamps gracefully when sizeCap is below HEADROOM', () => {
   assert.match(out, /<summary>Tail projects \(3 truncated/);
 });
 
+test('truncateComment never exceeds sizeCap even for pathological tiny caps', () => {
+  // sizeCap=50: the slice clamps to '', and both the tail summary + trailer
+  // (~250 B) and the fallback note (~106 B) exceed the cap — only the minimal
+  // marker fits. sizeCap=1: even that doesn't fit → empty output. Mirrors the
+  // formatter truncator's graceful degradation.
+  const results = Array.from({ length: 3 }, (_, i) => makeProject(i));
+  const md = results.map((_, i) => renderBlock(i)).join('');
+  const out50 = truncateComment(md, results, { sizeCap: 50 });
+  assert.ok(
+    Buffer.byteLength(out50, 'utf8') <= 50,
+    `output must fit in sizeCap (got ${Buffer.byteLength(out50, 'utf8')})`
+  );
+  assert.equal(out50, '\n_(truncated)_\n');
+  const out1 = truncateComment(md, results, { sizeCap: 1 });
+  assert.equal(out1, '');
+  assert.ok(Buffer.byteLength(out1, 'utf8') <= 1, 'empty output must not exceed sizeCap');
+});
+
 test('truncateComment falls back to a short note when tail summary itself exceeds sizeCap', () => {
   // 400 truncated projects × ~60 bytes/row far exceeds HEADROOM (15 000),
   // pushing the assembled output past sizeCap. The final byte-check must

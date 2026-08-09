@@ -43,6 +43,18 @@ test('renderProjectBlock omits the version suffix when eslintVersion is absent',
   assert.ok(!out.includes('(eslint '), 'no version suffix without eslintVersion');
 });
 
+test('renderProjectBlock renders a ? line entry as a plain span (no #L? anchor)', () => {
+  // Fatal parse errors can produce `path:?` entries (the line-fallback). The
+  // anchor regex requires digits, so a `?` line must render as plain text —
+  // a regression emitting a broken `#L?` anchor would fail here.
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: { '(parser error)': { errors: 1, warnings: 0, fixable: 0, files: ['broken.js:?'] } },
+  }));
+  assert.ok(out.includes('broken.js:?'), 'entry must render');
+  assert.doesNotMatch(out, /#L\?/, 'no anchor may be emitted for a non-numeric line');
+});
+
 test('renderProjectBlock emits pipe-table header', () => {
   const out = renderProjectBlock(make({
     errorCount: 1,

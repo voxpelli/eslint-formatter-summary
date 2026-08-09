@@ -93,6 +93,26 @@ test('prepareProjectResult keeps fatal messages that emit no line, using a ? pla
   assert.deepEqual(result.rules['(parser error)']?.files, ['broken.js:?']);
 });
 
+test('prepareProjectResult keeps fatal messages with a null line, using a ? placeholder', () => {
+  // `line: null` must be treated like an absent line (the sibling tool's
+  // `msg.line ?? '?'` collapses both) — not silently dropped.
+  const raw = /** @satisfies {LintResultLite[]} */ ([{
+    filePath: '/repo/broken.js',
+    errorCount: 1,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    messages: [
+      // eslint-disable-next-line unicorn/no-null
+      /** @type {any} */ ({ ruleId: null, severity: 2, fatal: true, column: 1, line: null, message: 'Parsing error: Unexpected token' }),
+    ],
+  }]);
+  const result = prepareProjectResult(raw, { baseDir });
+  assert.ok(result);
+  assert.deepEqual(result.syntheticKeys, ['(parser error)']);
+  assert.deepEqual(result.rules['(parser error)']?.files, ['broken.js:?']);
+});
+
 test('prepareProjectResult captures detail via \\t separator for unused-disable', () => {
   const raw = /** @satisfies {LintResultLite[]} */ ([{
     filePath: '/repo/a.js',

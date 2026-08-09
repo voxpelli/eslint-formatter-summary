@@ -27,6 +27,13 @@ test('toCount collapses NaN / non-numeric / object / null to 0', () => {
   assert.equal(toCount(null), 0);
 });
 
+test('toCount rejects booleans and other coercible shapes (regression: tampered artifact used to render "1 errors" for true)', () => {
+  assert.equal(toCount(true), 0);
+  assert.equal(toCount(false), 0);
+  assert.equal(toCount([5]), 0);
+  assert.equal(toCount(undefined), 0);
+});
+
 test('toCount collapses Infinity to 0 (regression: tampered artifact used to render "Infinity errors")', () => {
   assert.equal(toCount(Number.POSITIVE_INFINITY), 0);
   assert.equal(toCount(Number.NEGATIVE_INFINITY), 0);

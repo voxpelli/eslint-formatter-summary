@@ -27,7 +27,7 @@ When you need more detail to diagnose a failure:
 
 ```sh
 # Full TAP output (see which specific test failed and why)
-npx c8 node --test --test-reporter spec 'test/**/*.spec.js'
+npx c8 node --test --test-reporter spec 'test/**/*.test.js'
 
 # Per-file coverage table (find which files lack coverage)
 npx c8 report --reporter=text

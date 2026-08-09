@@ -44,7 +44,7 @@ npm i -D @voxpelli/eslint-formatter-summary
 | ---------- | --------------------------------- | ------------------------- |
 | Node.js    | The LTS releases of Node.js       | `engines.node`            |
 | TypeScript | Version `>=5.9` (optional)        | `engines.typescript`      |
-| ESLint     | Version `>=9` (only flat configs) | `peerDependencies.eslint` |
+| ESLint     | Version `>=9.13.0` (only flat configs) | `peerDependencies.eslint` |
 
 ## How to use
 
@@ -155,7 +155,7 @@ Set `EFS_CAP=true` to opt into capped output. When set:
 - Total output is capped by bytes (default 60 000, overridable with `EFS_SIZE_CAP`); the output is truncated at the last complete table row and a trailer is appended.
 - `$GITHUB_STEP_SUMMARY` is **still written uncapped**, so the step-summary page has the full report while the stdout (typically fed into a sticky-comment action) stays under budget.
 
-The markdown output is portable — it uses Unicode emoji (🔧 / ✅) and Unicode em-dash rather than GitHub-only `:wrench:` / `&mdash;` shortcodes, so it renders identically on GitLab, Bitbucket, Gitea, Slack, email, and plain-Markdown viewers. (The CLI aggregate path emits GitHub-specific `blob/HEAD/<path>#L<line>` anchors for clickable file references; on other forges those fall back to plain text.)
+The markdown output is portable — it uses Unicode emoji (🔧 / ✅) and Unicode em-dash rather than GitHub-only `:wrench:` / `&mdash;` shortcodes, so those characters render identically on GitLab, Bitbucket, Gitea, Slack, email, and plain-Markdown viewers. The `<details>`/`<summary>` collapsible sections are HTML and render only in viewers with HTML support (GitHub, GitLab, Bitbucket, and Gitea render them; some plain-Markdown viewers show the raw tags). (The CLI aggregate path emits GitHub-specific `blob/HEAD/<path>#L<line>` anchors for clickable file references; on other forges those fall back to plain text.)
 
 ### Environment variables
 
@@ -186,9 +186,12 @@ eslint-summary prepare --project owner/repo project/eslint-results.json > result
 
 # Piped
 eslint --format json | eslint-summary prepare --project owner/repo > result.json
+
+# Matrix cell: stamp the ESLint version so the aggregate comment can name it
+eslint-summary prepare --project owner/repo --eslint-version 9.22 project/eslint-results.json > result.json
 ```
 
-Flags: `--project <owner/repo>` (or env `EFS_PROJECT_NAME`), `--out <path>` (default `-` = stdout), `--cwd <path>` (strip-prefix for relative file paths).
+Flags: `--project <owner/repo>` (or env `EFS_PROJECT_NAME`), `--eslint-version <v>` (or env `EFS_ESLINT_VERSION`), `--out <path>` (default `-` = stdout), `--cwd <path>` (strip-prefix for relative file paths).
 
 ### `eslint-summary aggregate <results-dir>`
 
@@ -202,7 +205,9 @@ eslint-summary aggregate --project-count 25 --out comment.md results/
 eslint-summary aggregate --full results/ >> "$GITHUB_STEP_SUMMARY"
 ```
 
-Flags: `--full` (uncapped markdown), `--project-count <n>` (for "all N pass" message; env `EXTERNAL_PROJECT_COUNT`), `--out <path>`, `--sort-by <project|severity>`, `--size-cap <bytes>` (default 60000; env `EFS_SIZE_CAP`), `--file-cap <n>` (per-rule file-entry cap, default 50).
+Flags: `--full` (uncapped markdown), `--project-count <n>` (for "all N pass" message; env `EXTERNAL_PROJECT_COUNT`), `--eslint-versions <csv>` (comma-separated ESLint versions for the version-aware clean-run message; env `EFS_ESLINT_VERSIONS`), `--out <path>`, `--sort-by <project|severity>`, `--size-cap <bytes>` (default 60000; env `EFS_SIZE_CAP`), `--file-cap <n>` (per-rule file-entry cap, default 50).
+
+`aggregate` always emits output — the clean-run message on an empty results directory, the fleet comment otherwise — so the workflow's success gate is the exit code, not a `[ -s comment.md ]` check on the output file.
 
 ### Defensive sanitization
 
@@ -229,6 +234,13 @@ This is defense-in-depth: a misbehaving ESLint plugin or an attacker-authored fo
   with:
     header: eslint-summary
     path: comment.md
+```
+
+Posting or updating a PR comment requires the `pull-requests: write` permission — declare it on the job (or use a token that has it):
+
+```yaml
+permissions:
+  pull-requests: write
 ```
 
 For per-line inline review comments, use [`reviewdog/action-eslint`](https://github.com/reviewdog/action-eslint) with ESLint's native format — that's a complementary path, not an overlap. `eslint-summary` handles the fleet-level aggregation and byte-capped sticky comment; reviewdog handles per-location annotations.

@@ -39,16 +39,17 @@ Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · �
 ### PR 3 — feat: add eslint-summary CLI (prepare + aggregate)
 - Branch: `feat/eslint-summary-cli`
 - Absorbs:
-  - `../eslint-config-voxpelli/tools/prepare-eslint-result.js` → `efs prepare`
-  - `../eslint-config-voxpelli/tools/generate-canary-comment.js` → `efs aggregate`
+  - `../eslint-config-voxpelli/tools/prepare-eslint-result.js` → `eslint-summary prepare`
+  - `../eslint-config-voxpelli/tools/generate-canary-comment.js` → `eslint-summary aggregate`
 - Runtime dep additions: `peowly`, `peowly-commands`
 - Dev dep bumps: `@voxpelli/eslint-config` → ^25 for the `cliFiles` option
 - AC:
   - `eslint-summary prepare <raw.json>` emits `ProjectResult` JSON matching the sibling shape
   - `eslint-summary aggregate <results-dir>` emits the sticky-PR-comment markdown with truncation; `--full` emits uncapped markdown (caller redirects to `$GITHUB_STEP_SUMMARY` explicitly)
   - `eslint-summary prepare` reads from stdin when no `<input-file>` positional is given (`eslint --format json | eslint-summary prepare`)
+  - `prepare --eslint-version` stamps the ESLint version into the ProjectResult; `aggregate` renders it in project labels and the version-aware clean-run message (`--eslint-versions`)
   - Untrusted strings (rule ids, file paths, message details) pass through length-cap + secret-scrub before HTML escape
-  - Formatter entry (`index.cjs`) and `lib/format-results.js` behavior unchanged
+  - Formatter entry (`index.cjs`) and `lib/format-results.js` behavior unchanged except the intentional exceptions documented in README.md: opt-in formatter caps (`EFS_CAP`/`EFS_FILE_CAP`/`EFS_SIZE_CAP`), the `EFS_GITHUB_STEP_SUMMARY` → `EFS_SKIP_GH_SUMMARY` rename, and the summary/sanitization behavior changes
   - Full test suite green, including the real-world self-host
   - File-path entries include `:line` only in CLI output (not in formatter markdown)
 - Notes: Architecture pivot consolidated former PR 3 (per-project output), PR 4 (sticky comment), and PR 5 (canary adoption's library-consumer side) into a single CLI feat minor release.

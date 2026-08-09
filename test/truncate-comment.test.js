@@ -67,6 +67,28 @@ test('truncateComment handles first-block-exceeds-slice-window with balanced tag
   assert.equal(opens, closes, 'every <details> must have a matching </details>');
 });
 
+test('truncateComment preserves the header prefix when the first block exceeds the slice window', () => {
+  // Regression guard for the `lastClose === -1` branch dropping the rendered
+  // comment header + aggregate totals: the prefix before the first <details>
+  // must survive truncation while the oversized partial project block is
+  // still excluded (rolled into the tail summary).
+  const header = '## External project test results\n\n' +
+    '**1 project(s) reported issues** — 1 errors (0 fixable)\n\n';
+  const fatBlock = '<details>\n<summary>owner/proj-0</summary>\n\n' +
+    'x'.repeat(20_000) + '\n</details>\n\n';
+  const results = [makeProject(0)];
+  const out = truncateComment(header + fatBlock, results, { sizeCap: 18_000 });
+  assert.ok(out.startsWith(header), 'header prefix must be preserved');
+  assert.match(out, /<summary>Tail projects \(1 truncated/);
+  assert.match(out, /file:line detail truncated for tail projects/, 'trailer sentence');
+  assert.ok(Buffer.byteLength(out, 'utf8') <= 18_000, 'output must fit within sizeCap');
+  // No partial project block may leak into the kept section.
+  assert.ok(!out.includes('<summary>owner/proj-0</summary>'), 'partial block must be excluded');
+  const opens = (out.match(/<details[\s>]/g) ?? []).length;
+  const closes = (out.match(/<\/details>/g) ?? []).length;
+  assert.equal(opens, closes, 'every <details> must have a matching </details>');
+});
+
 test('truncateComment clamps gracefully when sizeCap is below HEADROOM', () => {
   // sizeCap (5000) < HEADROOM (15000) → (sizeCap - HEADROOM) is negative.
   // Without the Math.max(0, …) clamp, Buffer.subarray would interpret the

@@ -3,7 +3,7 @@ import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
-import { canonicalizeSync } from '../lib/utils/canonicalize.js';
+import { canonicalizeSync } from '../lib/cli/canonicalize.js';
 import { makeTmpDir } from './_helpers.js';
 
 test('canonicalizeSync resolves an existing path through realpath', async () => {

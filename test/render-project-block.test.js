@@ -24,6 +24,25 @@ test('renderProjectBlock shows fixable count in summary when >0', () => {
   assert.ok(out.includes('1 errors, 0 warnings (1 fixable 🔧)'));
 });
 
+test('renderProjectBlock appends the eslint version to the project label when present', () => {
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    eslintVersion: '9.22',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(out.includes('(eslint 9.22)'), 'version suffix after the label');
+});
+
+test('renderProjectBlock omits the version suffix when eslintVersion is absent', () => {
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(!out.includes('(eslint '), 'no version suffix without eslintVersion');
+});
+
 test('renderProjectBlock emits pipe-table header', () => {
   const out = renderProjectBlock(make({
     errorCount: 1,

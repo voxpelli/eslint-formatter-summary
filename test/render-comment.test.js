@@ -17,6 +17,16 @@ for (const count of /** @type {Array<number | undefined>} */ ([undefined, 0, -3]
   });
 }
 
+test('renderSuccess names the ESLint versions when provided', () => {
+  const out = renderSuccess(32, ['9.22', '10']);
+  assert.match(out, /✅ All 32 external projects pass on eslint 9.22 and 10\n$/);
+});
+
+test('renderSuccess omits the version clause when the list is empty', () => {
+  assert.match(renderSuccess(5, []), /✅ All 5 external projects pass\n$/);
+  assert.match(renderSuccess(5, undefined), /✅ All 5 external projects pass\n$/);
+});
+
 test('renderComment sums errors, warnings, and fixable across projects', () => {
   // Distinct totals per axis so a mixed-up error/warning assertion cannot
   // coincidentally pass: errors=5, warnings=11, fixableErrors=1, fixableWarnings=3.

@@ -53,6 +53,43 @@ test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async
   assert.equal(parsed.project, 'from/env');
 });
 
+test('prepare: stamps --eslint-version into the ProjectResult', async (t) => {
+  const tmp = await tmpDir(t);
+  const inputFile = path.join(tmp, 'raw.json');
+  await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+  const { code, stdout } = await runCli(
+    ['prepare', '--project', 'acme/demo', '--eslint-version', '9.22', '--cwd', '/proj', inputFile],
+  );
+  assert.equal(code, 0);
+  const parsed = JSON.parse(stdout);
+  assert.equal(parsed.eslintVersion, '9.22');
+});
+
+test('prepare: reads eslint version from EFS_ESLINT_VERSION when flag absent', async (t) => {
+  const tmp = await tmpDir(t);
+  const inputFile = path.join(tmp, 'raw.json');
+  await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+  const { code, stdout } = await runCli(
+    ['prepare', '--cwd', '/proj', inputFile],
+    { env: { EFS_ESLINT_VERSION: '10' } },
+  );
+  assert.equal(code, 0);
+  const parsed = JSON.parse(stdout);
+  assert.equal(parsed.eslintVersion, '10');
+});
+
+test('prepare: omits eslintVersion when neither flag nor env is given', async (t) => {
+  const tmp = await tmpDir(t);
+  const inputFile = path.join(tmp, 'raw.json');
+  await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
+  const { code, stdout } = await runCli(
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile],
+  );
+  assert.equal(code, 0);
+  const parsed = JSON.parse(stdout);
+  assert.equal('eslintVersion' in parsed, false, 'field must be absent when not supplied');
+});
+
 test('prepare: writes to --out file and emits nothing to stdout', async (t) => {
   const tmp = await tmpDir(t);
   const inputFile = path.join(tmp, 'raw.json');
@@ -121,6 +158,31 @@ test('aggregate: emits "all N pass" on empty results directory', async (t) => {
   const { code, stdout } = await runCli(['aggregate', '--project-count', '5', results]);
   assert.equal(code, 0);
   assert.match(stdout, /All 5 external projects pass/);
+});
+
+test('aggregate: clean-run message names the ESLint versions from --eslint-versions', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await mkdir(results, { recursive: true });
+  const { code, stdout } = await runCli(
+    ['aggregate', '--project-count', '32', '--eslint-versions', '9.22,10', results],
+  );
+  assert.equal(code, 0);
+  assert.match(stdout, /✅ All 32 external projects pass on eslint 9.22 and 10\n$/);
+});
+
+test('aggregate: renders the eslint version in the project label from the artifact', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await writeOneProjectArtifact(results, {
+    project: 'acme/demo',
+    eslintVersion: '9.22',
+    errorCount: 2,
+    rules: { 'no-unused-vars': { errors: 2, warnings: 0, fixable: 0, files: ['src/a.js:10'] } },
+  });
+  const { code, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 0);
+  assert.match(stdout, /\(eslint 9\.22\)/);
 });
 
 test('aggregate: renders fleet sticky-PR-comment from per-project artifacts', async (t) => {

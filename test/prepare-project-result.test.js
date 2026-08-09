@@ -187,3 +187,31 @@ test('prepareProjectResult sums file-level counts from ESLint, not message walk'
   assert.ok(result);
   assert.equal(result.errorCount, 5);
 });
+
+test('prepareProjectResult stamps eslintVersion when provided', () => {
+  const raw = /** @satisfies {LintResultLite[]} */ ([{
+    filePath: '/repo/a.js',
+    errorCount: 1,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    messages: [{ ruleId: 'no-undef', severity: 2, column: 1, line: 1, message: 'x' }],
+  }]);
+  const result = prepareProjectResult(raw, { baseDir, eslintVersion: '9.22' });
+  assert.ok(result);
+  assert.equal(result.eslintVersion, '9.22');
+});
+
+test('prepareProjectResult omits eslintVersion when not supplied (additive shape)', () => {
+  const raw = /** @satisfies {LintResultLite[]} */ ([{
+    filePath: '/repo/a.js',
+    errorCount: 1,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    messages: [{ ruleId: 'no-undef', severity: 2, column: 1, line: 1, message: 'x' }],
+  }]);
+  const result = prepareProjectResult(raw, { baseDir });
+  assert.ok(result);
+  assert.equal('eslintVersion' in result, false, 'field must be absent, not empty');
+});

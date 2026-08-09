@@ -20,6 +20,11 @@ test('accepts valid shapes', () => {
   assert.equal(isValidProjectResult({ project: '', rules: {} }), true, 'empty project (prepare default) is valid');
   assert.equal(isValidProjectResult({
     project: 'a/b',
+    eslintVersion: '9.22',
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }), true, 'eslintVersion optional string is valid');
+  assert.equal(isValidProjectResult({
+    project: 'a/b',
     rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
   }), true, 'bucket with files array is valid');
 });

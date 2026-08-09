@@ -20,6 +20,18 @@ test('scrubs GitHub user tokens', () => {
   assert.equal(sanitizeUntrusted(token), '[REDACTED]');
 });
 
+test('scrubs GitHub OAuth and refresh tokens', () => {
+  const oauth = 'gho_' + 'C'.repeat(40);
+  assert.equal(sanitizeUntrusted(`leak: ${oauth} here`), 'leak: [REDACTED] here');
+  const refresh = 'ghr_' + 'D'.repeat(36);
+  assert.equal(sanitizeUntrusted(refresh), '[REDACTED]');
+});
+
+test('scrubs fine-grained GitHub PATs (documented 22+1+59 shape)', () => {
+  const token = 'github_pat_' + 'A'.repeat(22) + '_' + 'B'.repeat(59);
+  assert.equal(sanitizeUntrusted(`token=${token}`), 'token=[REDACTED]');
+});
+
 test('scrubs npm tokens', () => {
   const token = 'npm_' + 'z'.repeat(40);
   assert.equal(sanitizeUntrusted(`NPM_TOKEN=${token}`), 'NPM_TOKEN=[REDACTED]');

@@ -294,19 +294,28 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');
   const ghToken = 'ghp_' + 'A'.repeat(40);
+  const ghoToken = 'gho_' + 'C'.repeat(40);
+  const ghrToken = 'ghr_' + 'D'.repeat(36);
+  const fineGrained = 'github_pat_' + 'E'.repeat(22) + '_' + 'F'.repeat(59);
   const npmToken = 'npm_' + 'B'.repeat(40);
   const awsKey = 'AKIAIOSFODNN7EXAMPLE';
   await writeOneProjectArtifact(results, {
     project: 'acme/demo',
-    errorCount: 3,
+    errorCount: 5,
     rules: {
       [`rule-${ghToken}`]: { errors: 1, warnings: 0, fixable: 0, files: [`src/${npmToken}.js:1`] },
-      [`rule-${awsKey}`]: { errors: 2, warnings: 0, fixable: 0, files: ['src/b.js:1'] },
+      [`rule-${ghoToken}`]: { errors: 1, warnings: 0, fixable: 0, files: ['src/b.js:1'] },
+      [`rule-${ghrToken}`]: { errors: 1, warnings: 0, fixable: 0, files: ['src/c.js:1'] },
+      [`rule-${fineGrained}`]: { errors: 1, warnings: 0, fixable: 0, files: ['src/d.js:1'] },
+      [`rule-${awsKey}`]: { errors: 1, warnings: 0, fixable: 0, files: ['src/e.js:1'] },
     },
   });
   const { code, stdout } = await runCli(['aggregate', results]);
   assert.equal(code, 0);
   assert.doesNotMatch(stdout, new RegExp(ghToken));
+  assert.doesNotMatch(stdout, new RegExp(ghoToken));
+  assert.doesNotMatch(stdout, new RegExp(ghrToken));
+  assert.doesNotMatch(stdout, new RegExp(fineGrained));
   assert.doesNotMatch(stdout, new RegExp(npmToken));
   assert.doesNotMatch(stdout, new RegExp(awsKey));
   assert.match(stdout, /\[REDACTED\]/);

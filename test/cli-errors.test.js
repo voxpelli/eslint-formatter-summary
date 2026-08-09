@@ -5,10 +5,12 @@ import { cmdAggregate } from '../lib/cli/cmd-aggregate.js';
 import { cmdPrepare } from '../lib/cli/cmd-prepare.js';
 import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
+/** @import { CliMeta } from 'peowly-commands' */
+
 // `parseNumericFlag` unit tests live in test/coerce.test.js — do not duplicate.
 
 const parentName = 'eslint-summary';
-const meta = /** @type {import('peowly-commands').CliMeta} */ ({ name: parentName });
+const meta = /** @type {CliMeta} */ ({ name: parentName });
 
 /**
  * @param {unknown} err

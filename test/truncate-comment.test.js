@@ -4,9 +4,11 @@ import test from 'node:test';
 import { truncateComment } from '../lib/cli/truncate-comment.js';
 import { makeProjectResult } from './_helpers.js';
 
+/** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+
 /**
  * @param {number} i
- * @returns {import('../lib/cli/prepare-project-result.js').ProjectResult}
+ * @returns {ProjectResult}
  */
 const makeProject = (i) => makeProjectResult({ project: `owner/proj-${i}`, errorCount: 1 });
 

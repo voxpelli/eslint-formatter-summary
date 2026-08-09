@@ -10,6 +10,7 @@ import {
 } from 'node:fs/promises';
 
 /** @import { ProjectResult } from '../lib/cli/prepare-project-result.js' */
+/** @import { TestContext } from 'node:test' */
 
 const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.url));
 
@@ -75,7 +76,7 @@ export const makeTmpDir = async () => {
  * Allocate an auto-cleaned temp directory using `t.after`. Replaces the
  * `try { … } finally { await cleanup(); }` idiom with a single `await` line.
  *
- * @param {import('node:test').TestContext} t
+ * @param {TestContext} t
  * @returns {Promise<string>} Absolute path to the new tmp dir.
  */
 export const tmpDir = async (t) => {
@@ -89,7 +90,7 @@ export const tmpDir = async (t) => {
  * that yields the joined captured output so far. The restore is registered
  * BEFORE the hook is installed so a hook-assignment throw still restores.
  *
- * @param {import('node:test').TestContext} t
+ * @param {TestContext} t
  * @returns {() => string}
  */
 export const captureStderr = (t) => {
@@ -107,7 +108,7 @@ export const captureStderr = (t) => {
  * Override env vars for the lifetime of the test. Pass `undefined` as a value
  * to delete the key for the duration. Restore runs via `t.after`.
  *
- * @param {import('node:test').TestContext} t
+ * @param {TestContext} t
  * @param {Record<string, string | undefined>} overrides
  */
 export const withEnv = (t, overrides) => {

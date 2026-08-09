@@ -1,4 +1,4 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreDependencies": ["dot"]
+  "ignoreDependencies": ["dot", "@voxpelli/ast-grep-rules"]
 }

@@ -28,6 +28,7 @@
   ],
   "scripts": {
     "check": "run-p check:*",
+    "check:ast-grep": "ast-grep scan lib/ bin/ index.cjs",
     "check:installed-check": "installed-check -i @voxpelli/eslint-config",
     "check:knip": "knip",
     "check:lint": "eslint",
@@ -62,7 +63,9 @@
     "eslint": ">=9.13.0"
   },
   "devDependencies": {
+    "@ast-grep/cli": "^0.44.1",
     "@types/node": "^20.19.39",
+    "@voxpelli/ast-grep-rules": "^0.1.0",
     "@voxpelli/eslint-config": "^25.1.0",
     "@voxpelli/tsconfig": "^16.2.1",
     "c8": "^11.0.0",

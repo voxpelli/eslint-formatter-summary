@@ -13,6 +13,10 @@ test('stripControls removes bidi overrides (U+202A–U+202E)', () => {
   }
 });
 
+test('stripControls removes Arabic Letter Mark (U+061C)', () => {
+  assert.equal(stripControls('a' + String.fromCodePoint(0x061C) + 'b'), 'ab');
+});
+
 test('stripControls removes word-joiner / invisible-operator range (U+2060–U+2069)', () => {
   for (let cp = 0x2060; cp <= 0x2069; cp++) {
     assert.equal(stripControls('x' + String.fromCodePoint(cp) + 'y'), 'xy', `failed for U+${cp.toString(16)}`);

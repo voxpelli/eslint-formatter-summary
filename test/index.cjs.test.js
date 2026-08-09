@@ -1,4 +1,3 @@
-/* eslint-disable n/no-process-env */
 /* eslint-disable n/no-sync */
 /* eslint-disable security/detect-non-literal-fs-filename */
 

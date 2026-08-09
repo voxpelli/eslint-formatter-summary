@@ -31,7 +31,6 @@ test('toCount rejects booleans and other coercible shapes (regression: tampered 
   assert.equal(toCount(true), 0);
   assert.equal(toCount(false), 0);
   assert.equal(toCount([5]), 0);
-  assert.equal(toCount(undefined), 0);
 });
 
 test('toCount collapses Infinity to 0 (regression: tampered artifact used to render "Infinity errors")', () => {

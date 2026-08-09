@@ -2,11 +2,11 @@
 /* eslint-disable security/detect-non-literal-regexp */
 
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import test from 'node:test';
 import {
   mkdir, readFile, stat, writeFile,
 } from 'node:fs/promises';
-import path from 'node:path';
-import test from 'node:test';
 
 import { runCli, tmpDir, writeOneProjectArtifact } from './_helpers.js';
 
@@ -85,7 +85,7 @@ test('prepare: omits eslintVersion when neither flag nor env is given', async (t
   const inputFile = path.join(tmp, 'raw.json');
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
-    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile],
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile]
   );
   assert.equal(code, 0);
   const parsed = JSON.parse(stdout);
@@ -167,7 +167,7 @@ test('aggregate: clean-run message names the ESLint versions from --eslint-versi
   const results = path.join(tmp, 'results');
   await mkdir(results, { recursive: true });
   const { code, stdout } = await runCli(
-    ['aggregate', '--project-count', '32', '--eslint-versions', '9.22,10', results],
+    ['aggregate', '--project-count', '32', '--eslint-versions', '9.22,10', results]
   );
   assert.equal(code, 0);
   assert.match(stdout, /✅ All 32 external projects pass on eslint 9.22 and 10\n$/);

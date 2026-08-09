@@ -24,7 +24,7 @@ test('renderSuccess names the ESLint versions when provided', () => {
 
 test('renderSuccess omits the version clause when the list is empty', () => {
   assert.match(renderSuccess(5, []), /✅ All 5 external projects pass\n$/);
-  assert.match(renderSuccess(5, undefined), /✅ All 5 external projects pass\n$/);
+  assert.match(renderSuccess(5), /✅ All 5 external projects pass\n$/);
 });
 
 test('renderComment sums errors, warnings, and fixable across projects', () => {

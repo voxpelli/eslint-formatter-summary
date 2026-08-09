@@ -1,5 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreDependencies": ["dot", "@voxpelli/ast-grep-rules"],
-  "entry": ["bin/eslint-summary.js", "index.cjs", "test/*.test.js"]
+  "entry": ["test/*.test.js"]
 }

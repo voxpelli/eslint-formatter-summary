@@ -263,6 +263,27 @@ test('aggregate: warns on stderr when every candidate artifact is skipped', asyn
   assert.match(stderr, /all 1 candidate artifact\(s\) in .+ were skipped/);
 });
 
+test('aggregate: warns per skipped candidate with path and reason while keeping valid results', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // One valid artifact and one malformed one — the valid project must still
+  // render while the malformed candidate is surfaced on stderr with its path
+  // and skip reason (a partial skip would otherwise be silent).
+  await writeOneProjectArtifact(results, {
+    project: 'acme/good',
+    errorCount: 1,
+    rules: { foo: { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  });
+  const badSubdir = path.join(results, 'acme-bad');
+  await mkdir(badSubdir, { recursive: true });
+  await writeFile(path.join(badSubdir, 'eslint-result.json'), 'not-json', 'utf8');
+  const { code, stderr, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 0);
+  assert.match(stdout, /acme\/good/, 'valid artifact must still render');
+  assert.match(stderr, /skipped .*acme-bad.*eslint-result\.json \(unreadable or unparseable JSON\)/);
+  assert.doesNotMatch(stderr, /all \d+ candidate artifact\(s\).*were skipped/, 'aggregate warning only fires on 100% skip');
+});
+
 test('aggregate: exits 1 when results directory is missing (no silent all-pass)', async () => {
   const { code, stderr } = await runCli(['aggregate', '/definitely/does/not/exist']);
   assert.equal(code, 1);

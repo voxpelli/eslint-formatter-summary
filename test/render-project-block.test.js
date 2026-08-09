@@ -43,6 +43,20 @@ test('renderProjectBlock omits the version suffix when eslintVersion is absent',
   assert.ok(!out.includes('(eslint '), 'no version suffix without eslintVersion');
 });
 
+test('renderProjectBlock sanitizes a tampered eslintVersion (no markup injection)', () => {
+  // The version is artifact-sourced (untrusted) — a regression removing
+  // escapeHtml/sanitizeUntrusted from the label path would leak raw markup
+  // into the <summary> line.
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    eslintVersion: '<b>9.22</b>',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(out.includes('&lt;b&gt;9.22&lt;/b&gt;'), 'markup must be HTML-escaped');
+  assert.ok(!out.includes('<b>9.22</b>'), 'no raw markup may reach the summary line');
+});
+
 test('renderProjectBlock renders a ? line entry as a plain span (no #L? anchor)', () => {
   // Fatal parse errors can produce `path:?` entries (the line-fallback). The
   // anchor regex requires digits, so a `?` line must render as plain text —

@@ -27,6 +27,14 @@ test('renderSuccess omits the version clause when the list is empty', () => {
   assert.match(renderSuccess(5), /✅ All 5 external projects pass\n$/);
 });
 
+test('renderSuccess strips control characters from version entries', () => {
+  // sanitizeUntrusted removes bidi/control codepoints — a terminal-control
+  // sequence smuggled through --eslint-versions must not reach the message.
+  const out = renderSuccess(2, ['9.22', '\u001B[2J10']);
+  assert.ok(!out.includes('\u001B'), 'no raw control char in the message');
+  assert.match(out, /on eslint 9\.22 and \[2J10\n$/);
+});
+
 test('renderComment sums errors, warnings, and fixable across projects', () => {
   // Distinct totals per axis so a mixed-up error/warning assertion cannot
   // coincidentally pass: errors=5, warnings=11, fixableErrors=1, fixableWarnings=3.

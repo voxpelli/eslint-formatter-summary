@@ -134,6 +134,7 @@ test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps 
   withEnv(t, {
     EFS_OUTPUT: 'markdown',
     EFS_CAP: 'true',
+    EFS_FILE_CAP: undefined,
     GITHUB_STEP_SUMMARY: summaryPath,
   });
   const out = await formatter(lintFixture(120), context);

@@ -52,6 +52,13 @@ for (const [label, input] of /** @type {Array<[string, unknown]>} */ ([
   ['project missing', { rules: {} }],
   ['project number', { project: 42, rules: {} }],
   ['project null', { project: null, rules: {} }],
+  // eslintVersion field
+  ['eslintVersion number', { project: 'a/b', eslintVersion: 42, rules: {} }],
+  // count fields (optional-but-number-when-present)
+  ['errorCount string', { project: 'a/b', errorCount: 'garbage', rules: {} }],
+  ['warningCount boolean', { project: 'a/b', warningCount: true, rules: {} }],
+  ['bucket errors string', { project: 'a/b', rules: { 'no-undef': { errors: 'x', files: ['a.js:1'] } } }],
+  ['bucket fixable boolean', { project: 'a/b', rules: { 'no-undef': { fixable: true, files: ['a.js:1'] } } }],
   // rule-bucket shape
   ['bucket null', { project: 'a/b', rules: { 'no-undef': null } }],
   ['bucket files non-array', { project: 'a/b', rules: { 'no-undef': { files: 'a.js:1' } } }],

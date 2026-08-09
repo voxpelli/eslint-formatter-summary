@@ -113,6 +113,25 @@ test('prepareProjectResult keeps fatal messages with a null line, using a ? plac
   assert.deepEqual(result.rules['(parser error)']?.files, ['broken.js:?']);
 });
 
+test('prepareProjectResult drops messages whose line is a non-number (guard reject side)', () => {
+  // The relaxed guard accepts absent/null/number lines only — a string or
+  // boolean line is still rejected (dropped), pinning the reject side.
+  const raw = /** @satisfies {LintResultLite[]} */ ([{
+    filePath: '/repo/broken.js',
+    errorCount: 1,
+    warningCount: 0,
+    fixableErrorCount: 0,
+    fixableWarningCount: 0,
+    messages: [
+      // eslint-disable-next-line unicorn/no-null
+      /** @type {any} */ ({ ruleId: null, severity: 2, fatal: true, column: 1, line: '1', message: 'Parsing error: Unexpected token' }),
+    ],
+  }]);
+  const result = prepareProjectResult(raw, { baseDir });
+  assert.ok(result);
+  assert.equal(Object.keys(result.rules).length, 0, 'message with a string line must be dropped');
+});
+
 test('prepareProjectResult captures detail via \\t separator for unused-disable', () => {
   const raw = /** @satisfies {LintResultLite[]} */ ([{
     filePath: '/repo/a.js',

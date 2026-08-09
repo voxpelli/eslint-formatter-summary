@@ -85,7 +85,8 @@ test('prepare: omits eslintVersion when neither flag nor env is given', async (t
   const inputFile = path.join(tmp, 'raw.json');
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
-    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile]
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile],
+    { env: { EFS_ESLINT_VERSION: undefined } }
   );
   assert.equal(code, 0);
   const parsed = JSON.parse(stdout);
@@ -185,6 +186,33 @@ test('aggregate: clean-run message sanitizes markup and control chars in --eslin
   assert.doesNotMatch(stdout, /<b>10<\/b>/, 'no raw markup may reach the message');
 });
 
+test('aggregate: --eslint-versions parsing handles single, spaced, and empty segments', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await mkdir(results, { recursive: true });
+  const single = await runCli(['aggregate', '--project-count', '2', '--eslint-versions', '9.22', results]);
+  assert.equal(single.code, 0);
+  assert.match(single.stdout, /on eslint 9\.22\n$/, 'single version, no "and"');
+  const spaced = await runCli(['aggregate', '--project-count', '2', '--eslint-versions', '9.22, 10', results]);
+  assert.equal(spaced.code, 0);
+  assert.match(spaced.stdout, /on eslint 9\.22 and 10\n$/, 'whitespace segments trimmed');
+  const empty = await runCli(['aggregate', '--project-count', '2', '--eslint-versions', ',', results]);
+  assert.equal(empty.code, 0);
+  assert.match(empty.stdout, /✅ All 2 external projects pass\n$/, 'empty segments drop the clause');
+});
+
+test('aggregate: clean-run message reads ESLint versions from EFS_ESLINT_VERSIONS env', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await mkdir(results, { recursive: true });
+  const { code, stdout } = await runCli(
+    ['aggregate', '--project-count', '2', results],
+    { env: { EFS_ESLINT_VERSIONS: '9.22' } }
+  );
+  assert.equal(code, 0);
+  assert.match(stdout, /on eslint 9\.22\n$/);
+});
+
 test('aggregate: renders the eslint version in the project label from the artifact', async (t) => {
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');
@@ -239,6 +267,34 @@ test('aggregate: --sort-by severity orders projects by error count desc', async 
   assert.ok(severity.indexOf('acme/zeta') < severity.indexOf('acme/alpha'), 'severity: zeta (5 errors) before alpha (1 error)');
 });
 
+test('aggregate: --sort-by severity breaks ties by warnings then project', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // Equal errorCounts exercise the warningCount tie-break; equal warnings
+  // fall through to the byProject comparator.
+  await writeOneProjectArtifact(results, {
+    project: 'acme/alpha',
+    errorCount: 1,
+    warningCount: 2,
+    rules: { foo: { errors: 1, warnings: 2, fixable: 0, files: ['a.js:1'] } },
+  });
+  await writeOneProjectArtifact(results, {
+    project: 'acme/beta',
+    errorCount: 1,
+    warningCount: 1,
+    rules: { foo: { errors: 1, warnings: 1, fixable: 0, files: ['a.js:1'] } },
+  });
+  await writeOneProjectArtifact(results, {
+    project: 'acme/gamma',
+    errorCount: 1,
+    warningCount: 1,
+    rules: { foo: { errors: 1, warnings: 1, fixable: 0, files: ['a.js:1'] } },
+  });
+  const { stdout } = await runCli(['aggregate', '--sort-by', 'severity', results]);
+  assert.ok(stdout.indexOf('acme/alpha') < stdout.indexOf('acme/beta'), 'alpha (2 warnings) before beta (1 warning)');
+  assert.ok(stdout.indexOf('acme/beta') < stdout.indexOf('acme/gamma'), 'equal warnings fall back to project order');
+});
+
 test('aggregate: --sort-by with invalid value exits 1 via InputError', async (t) => {
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');
@@ -277,6 +333,23 @@ test('aggregate: exits 1 with no success banner when every candidate artifact is
   assert.equal(code, 1);
   assert.doesNotMatch(stdout, /All .* external projects pass/, 'no success banner on 100% skip');
   assert.match(stderr, /Invalid input: all 1 candidate artifact\(s\) in .+ were skipped/);
+});
+
+test('aggregate: exits 1 when every candidate has an invalid result shape', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // Valid JSON but all fail isValidProjectResult (project must be a string) —
+  // the misconfiguration UX is exactly this scenario, and the throw is
+  // reason-agnostic so it must fire here too.
+  for (const name of ['proj-a', 'proj-b']) {
+    const subdir = path.join(results, name);
+    await mkdir(subdir, { recursive: true });
+    await writeFile(path.join(subdir, 'eslint-result.json'), JSON.stringify({ project: 123, rules: {} }), 'utf8');
+  }
+  const { code, stderr, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 1);
+  assert.doesNotMatch(stdout, /All .* external projects pass/, 'no success banner on 100% skip');
+  assert.match(stderr, /Invalid input: all 2 candidate artifact\(s\) in .+ were skipped/);
 });
 
 test('aggregate: escapes control characters in skipped-artifact paths on stderr', async (t) => {
@@ -328,7 +401,7 @@ test('aggregate: warns with reason when an artifact is oversize (>5 MB)', async 
   const { code, stderr, stdout } = await runCli(['aggregate', results]);
   assert.equal(code, 0);
   assert.match(stdout, /acme\/good/, 'valid artifact must still render');
-  assert.match(stderr, /skipped .*acme-fat.*eslint-result\.json \(oversize \(>5 MB\)\)/);
+  assert.match(stderr, /skipped .*acme-fat.*eslint-result\.json \(oversize >5 MB\)/);
 });
 
 test('aggregate: warns with reason when an artifact has an invalid result shape', async (t) => {

@@ -49,6 +49,18 @@ test('truncateComment appends a compact tail-summary table + step-summary traile
   assert.match(out, /file:line detail truncated for tail projects/, 'trailer sentence');
 });
 
+test('truncateComment tail summary renders eslint version and fixable counts', () => {
+  const results = [
+    makeProject(0),
+    makeProjectResult({ project: 'owner/proj-1', errorCount: 1, fixableErrorCount: 1, eslintVersion: '9.22' }),
+  ];
+  const md = renderBlock(0) + renderBlock(1);
+  const out = truncateComment(md, results, { sizeCap: 5_000 });
+  assert.match(out, /<summary>Tail projects \(2 truncated/);
+  assert.match(out, /\(eslint 9\.22\)/, 'version suffix in tail row');
+  assert.match(out, /1 🔧/, 'fixable count in tail row');
+});
+
 test('truncateComment handles first-block-exceeds-slice-window with balanced tags + tail summary', () => {
   // Exercises the `lastClose === -1` fallback branch: the first project block
   // alone is larger than `sizeCap - HEADROOM`, so the initial slice contains

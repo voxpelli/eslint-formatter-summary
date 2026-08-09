@@ -17,16 +17,23 @@ const binPath = fileURLToPath(new URL('../bin/eslint-summary.js', import.meta.ur
 /**
  * Spawn the installed `eslint-summary` bin with the given argv. When `input`
  * is provided it is written to stdin and stdin is closed; otherwise stdin is
- * ignored.
+ * ignored. `undefined` env values delete the key (so tests can clear ambient
+ * variables inherited from the shell).
  *
  * @param {string[]} argv
- * @param {{ cwd?: string, input?: string, env?: Record<string, string> }} [options]
+ * @param {{ cwd?: string, input?: string, env?: Record<string, string | undefined> }} [options]
  * @returns {Promise<{ stdout: string, stderr: string, code: number }>}
  */
 export const runCli = (argv, { cwd, env, input } = {}) => new Promise((resolve, reject) => {
+  const childEnv = { ...process.env };
+  if (env) {
+    for (const [key, value] of Object.entries(env)) {
+      if (value === undefined) delete childEnv[key]; else childEnv[key] = value;
+    }
+  }
   const child = spawn(process.execPath, [binPath, ...argv], {
     cwd,
-    env: { ...process.env, ...env },
+    env: childEnv,
     stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
   });
   let stdout = '';

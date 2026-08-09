@@ -45,11 +45,48 @@ test('truncateFormatterMarkdown clamps gracefully when sizeCap is below HEADROOM
   const out = truncateFormatterMarkdown(md, 3, { sizeCap: 300 });
   // Slice budget clamps to 0 when sizeCap < HEADROOM, so the output is just
   // the trailer (~50 bytes). The old `<= 2_000` was 7× over — a balloon
-  // regression would pass; tighten to catch it.
+  // regression would pass; tighten to the requested sizeCap to catch it.
   assert.ok(
-    Buffer.byteLength(out, 'utf8') <= 500,
-    `output must fit close to the trailer size (got ${Buffer.byteLength(out, 'utf8')})`
+    Buffer.byteLength(out, 'utf8') <= 300,
+    `output must not exceed the requested sizeCap (got ${Buffer.byteLength(out, 'utf8')})`
   );
+  assert.match(out, /rule rows truncated/);
+});
+
+test('truncateFormatterMarkdown emits a minimal marker when the trailer cannot fit', () => {
+  // sizeCap (20) is below the trailer length (~57 bytes) but above the
+  // minimal marker — the output must stay within sizeCap while preserving
+  // a truncation signal.
+  const rows = Array.from({ length: 3 }, (_, i) => makeRow(i, 'padding '.repeat(500))).join('');
+  const md = header + rows;
+  const out = truncateFormatterMarkdown(md, 3, { sizeCap: 20 });
+  assert.ok(
+    Buffer.byteLength(out, 'utf8') <= 20,
+    `output must fit in sizeCap (got ${Buffer.byteLength(out, 'utf8')})`
+  );
+  assert.equal(out, '\n_(truncated)_\n');
+});
+
+test('truncateFormatterMarkdown returns empty output when even the minimal marker cannot fit', () => {
+  const rows = Array.from({ length: 3 }, (_, i) => makeRow(i, 'padding '.repeat(500))).join('');
+  const md = header + rows;
+  const out = truncateFormatterMarkdown(md, 3, { sizeCap: 1 });
+  assert.equal(out, '');
+  assert.ok(Buffer.byteLength(out, 'utf8') <= 1, 'empty output must not exceed sizeCap');
+});
+
+test('truncateFormatterMarkdown preserves header + divider when only the header fits', () => {
+  // sizeCap just above HEADROOM (500): the slice budget is small enough that
+  // only the two-line header + divider fit, and no complete rule row. The
+  // kept section must retain the divider structure, not a partial row.
+  const rows = Array.from({ length: 3 }, (_, i) => makeRow(i, 'padding '.repeat(500))).join('');
+  const md = header + rows;
+  const out = truncateFormatterMarkdown(md, 3, { sizeCap: 600 });
+  assert.ok(
+    Buffer.byteLength(out, 'utf8') <= 600,
+    `output must fit in sizeCap (got ${Buffer.byteLength(out, 'utf8')})`
+  );
+  assert.ok(out.startsWith(header), 'header + divider must be preserved');
   assert.match(out, /rule rows truncated/);
 });
 

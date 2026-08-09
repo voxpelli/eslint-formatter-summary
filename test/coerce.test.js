@@ -67,7 +67,7 @@ test('parseNumericFlag parses positive integers', () => {
 test('parseNumericFlag throws InputError on fractional input (error message pins the raw value)', () => {
   assert.throws(
     () => parseNumericFlag('1.5', '--size-cap'),
-    (err) => err instanceof InputError && /must be a positive integer.*1\.5/.test(err.message),
+    (err) => err instanceof InputError && /must be a positive integer.*1\.5/.test(err.message)
   );
 });
 

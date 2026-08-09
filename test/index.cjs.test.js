@@ -109,21 +109,21 @@ for (const optInValue of ['true', '1', 'yes']) {
 }
 
 test('index.cjs: EFS_CAP unset leaves markdown uncapped (file list intact)', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'markdown' });
+  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: undefined, GITHUB_STEP_SUMMARY: undefined });
   const out = await formatter(lintFixture(120), context);
   assert.ok(out.includes('f119.js'), 'without cap, every file should render');
   assert.ok(!out.includes('… and '), 'no overflow trailer when uncapped');
 });
 
 test('index.cjs: EFS_CAP=true applies default file cap (50)', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true' });
+  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true', GITHUB_STEP_SUMMARY: undefined });
   const out = await formatter(lintFixture(120), context);
   assert.match(out, /… and 70 more/, 'overflow trailer should show 120-50=70');
   assert.ok(!out.includes('f119.js'), 'files past the cap should not render');
 });
 
 test('index.cjs: EFS_FILE_CAP overrides the default when caps are on', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: '1', EFS_FILE_CAP: '5' });
+  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: '1', EFS_FILE_CAP: '5', GITHUB_STEP_SUMMARY: undefined });
   const out = await formatter(lintFixture(20), context);
   assert.match(out, /… and 15 more/);
   assert.ok(!out.includes('f19.js'));
@@ -145,7 +145,7 @@ test('index.cjs: $GITHUB_STEP_SUMMARY receives uncapped markdown even when caps 
 });
 
 test('index.cjs: invalid EFS_FILE_CAP falls back to default and warns', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true', EFS_FILE_CAP: 'not-a-number' });
+  withEnv(t, { EFS_OUTPUT: 'markdown', EFS_CAP: 'true', EFS_FILE_CAP: 'not-a-number', GITHUB_STEP_SUMMARY: undefined });
   const getStderr = captureStderr(t);
   const out = await formatter(lintFixture(60), context);
   assert.match(out, /… and 10 more/, 'falls back to default 50');

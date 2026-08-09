@@ -149,6 +149,7 @@ export const makeProjectResult = (overrides = {}) => ({
  *
  * @param {string} dir
  * @param {Partial<ProjectResult>} overrides
+ * @returns {Promise<void>}
  */
 export const writeOneProjectArtifact = (dir, overrides) =>
   writeResultArtifact(dir, makeProjectResult(overrides));

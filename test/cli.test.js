@@ -2,7 +2,9 @@
 /* eslint-disable security/detect-non-literal-regexp */
 
 import assert from 'node:assert/strict';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import {
+  mkdir, readFile, stat, writeFile,
+} from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 
@@ -30,7 +32,7 @@ test('prepare: reads a raw ESLint JSON file and emits ProjectResult to stdout', 
   const inputFile = path.join(tmp, 'raw.json');
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stderr, stdout } = await runCli(
-    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile],
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', inputFile]
   );
   assert.equal(code, 0, `exit code was ${code}; stderr: ${stderr}`);
   assert.equal(stderr, '');
@@ -46,7 +48,7 @@ test('prepare: reads project slug from EFS_PROJECT_NAME when flag absent', async
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
     ['prepare', '--cwd', '/proj', inputFile],
-    { env: { EFS_PROJECT_NAME: 'from/env' } },
+    { env: { EFS_PROJECT_NAME: 'from/env' } }
   );
   assert.equal(code, 0);
   const parsed = JSON.parse(stdout);
@@ -58,7 +60,7 @@ test('prepare: stamps --eslint-version into the ProjectResult', async (t) => {
   const inputFile = path.join(tmp, 'raw.json');
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
-    ['prepare', '--project', 'acme/demo', '--eslint-version', '9.22', '--cwd', '/proj', inputFile],
+    ['prepare', '--project', 'acme/demo', '--eslint-version', '9.22', '--cwd', '/proj', inputFile]
   );
   assert.equal(code, 0);
   const parsed = JSON.parse(stdout);
@@ -71,7 +73,7 @@ test('prepare: reads eslint version from EFS_ESLINT_VERSION when flag absent', a
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
     ['prepare', '--cwd', '/proj', inputFile],
-    { env: { EFS_ESLINT_VERSION: '10' } },
+    { env: { EFS_ESLINT_VERSION: '10' } }
   );
   assert.equal(code, 0);
   const parsed = JSON.parse(stdout);
@@ -96,7 +98,7 @@ test('prepare: writes to --out file and emits nothing to stdout', async (t) => {
   const outFile = path.join(tmp, 'out.json');
   await writeFile(inputFile, JSON.stringify(rawFixture()), 'utf8');
   const { code, stdout } = await runCli(
-    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', '--out', outFile, inputFile],
+    ['prepare', '--project', 'acme/demo', '--cwd', '/proj', '--out', outFile, inputFile]
   );
   assert.equal(code, 0);
   assert.equal(stdout, '');
@@ -122,7 +124,7 @@ test('prepare: exits 1 with "empty stdin" when no positional and stdin is empty'
 test('prepare: reads raw ESLint JSON from stdin when no positional given', async () => {
   const { code, stderr, stdout } = await runCli(
     ['prepare', '--project', 'acme/demo', '--cwd', '/proj'],
-    { input: JSON.stringify(rawFixture()) },
+    { input: JSON.stringify(rawFixture()) }
   );
   assert.equal(code, 0, `exit code was ${code}; stderr: ${stderr}`);
   const parsed = JSON.parse(stdout);

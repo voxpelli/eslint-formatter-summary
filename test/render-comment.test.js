@@ -4,7 +4,7 @@ import test from 'node:test';
 import { renderComment, renderSuccess } from '../lib/cli/render-comment.js';
 import { makeProjectResult as make } from './_helpers.js';
 
-test('renderAllPass renders the "all N pass" body with the given count', () => {
+test('renderSuccess renders the "all N pass" body with the given count', () => {
   const out = renderSuccess(7);
   assert.match(out, /^## External project test results\n\n/);
   assert.match(out, /✅ All 7 external projects pass\n$/);
@@ -12,7 +12,7 @@ test('renderAllPass renders the "all N pass" body with the given count', () => {
 
 // Parameterised: every non-positive / undefined count falls back to '?'.
 for (const count of /** @type {Array<number | undefined>} */ ([undefined, 0, -3])) {
-  test(`renderAllPass falls back to "?" when count is ${String(count)}`, () => {
+  test(`renderSuccess falls back to "?" when count is ${String(count)}`, () => {
     assert.match(renderSuccess(count), /All \? external projects pass/);
   });
 }

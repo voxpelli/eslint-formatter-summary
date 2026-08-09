@@ -96,6 +96,6 @@ test('extractMessagesFrom throws a TypeError when messages is undefined', () => 
   ]));
   assert.throws(
     () => extractMessagesFrom(results, { cwd: '/p' }),
-    TypeError,
+    TypeError
   );
 });

@@ -173,6 +173,18 @@ test('aggregate: clean-run message names the ESLint versions from --eslint-versi
   assert.match(stdout, /✅ All 32 external projects pass on eslint 9.22 and 10\n$/);
 });
 
+test('aggregate: clean-run message sanitizes markup and control chars in --eslint-versions', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await mkdir(results, { recursive: true });
+  const { code, stdout } = await runCli(
+    ['aggregate', '--project-count', '2', '--eslint-versions', '9.22,<b>10</b>', results]
+  );
+  assert.equal(code, 0);
+  assert.match(stdout, /&lt;b&gt;10&lt;\/b&gt;/, 'markup must be HTML-escaped');
+  assert.doesNotMatch(stdout, /<b>10<\/b>/, 'no raw markup may reach the message');
+});
+
 test('aggregate: renders the eslint version in the project label from the artifact', async (t) => {
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');
@@ -251,18 +263,34 @@ test('aggregate: exits 1 via InputError when given multiple positional arguments
   assert.match(stderr, /Invalid input:/);
 });
 
-test('aggregate: warns on stderr when every candidate artifact is skipped', async (t) => {
+test('aggregate: exits 1 with no success banner when every candidate artifact is skipped', async (t) => {
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');
   // One subdir with a malformed JSON artifact — passes the stat check but
   // fails JSON.parse, so readResultsDirectory returns zero valid results.
+  // A 100% skip rate is a misconfiguration, not a clean run: the CLI must
+  // exit non-zero without emitting the "all N pass" banner.
   const subdir = path.join(results, 'proj-a');
   await mkdir(subdir, { recursive: true });
   await writeFile(path.join(subdir, 'eslint-result.json'), 'not-json', 'utf8');
   const { code, stderr, stdout } = await runCli(['aggregate', results]);
-  assert.equal(code, 0);
-  assert.match(stdout, /All \? external projects pass/);
-  assert.match(stderr, /all 1 candidate artifact\(s\) in .+ were skipped/);
+  assert.equal(code, 1);
+  assert.doesNotMatch(stdout, /All .* external projects pass/, 'no success banner on 100% skip');
+  assert.match(stderr, /Invalid input: all 1 candidate artifact\(s\) in .+ were skipped/);
+});
+
+test('aggregate: escapes control characters in skipped-artifact paths on stderr', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // A forged subdir name carrying a terminal-control sequence must not reach
+  // stderr raw — it is escaped as \x1b so it cannot forge log lines.
+  const evilSubdir = path.join(results, 'bad\u001B[2Jname');
+  await mkdir(evilSubdir, { recursive: true });
+  await writeFile(path.join(evilSubdir, 'eslint-result.json'), 'not-json', 'utf8');
+  const { code, stderr } = await runCli(['aggregate', results]);
+  assert.equal(code, 1);
+  assert.ok(!stderr.includes('\u001B'), 'no raw control char may reach stderr');
+  assert.match(stderr, /bad\\x1b\[2Jname/, 'control char escaped as literal \\x1b');
 });
 
 test('aggregate: warns per skipped candidate with path and reason while keeping valid results', async (t) => {

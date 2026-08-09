@@ -89,3 +89,17 @@ test('renderProjectBlock sort is stable when bucket counts are tampered (non-fin
     `a-real should precede b-tampered in sorted output (got a@${aIdx}, b@${bIdx})`);
   assert.doesNotMatch(out, /Infinity/, 'no Infinity leaks into rendered counts');
 });
+
+test('renderProjectBlock uses the Object.entries key, not a spoofed bucket.id', () => {
+  // A tampered artifact could carry an `id` field inside a rule bucket that
+  // disagrees with the map key. The spread must place `id` last so the key
+  // always wins — otherwise the spoofed id renders in the Rule cell.
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: {
+      'real-id': { id: 'spoofed-id', errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] },
+    },
+  }));
+  assert.ok(out.includes('<code>real-id</code>'), 'key should render in the Rule cell');
+  assert.ok(!out.includes('spoofed-id'), 'bucket.id must not override the map key');
+});

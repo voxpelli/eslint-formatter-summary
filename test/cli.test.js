@@ -626,10 +626,10 @@ test('prepare: empty input file with control chars in path encodes them in stder
   assert.ok(stderr.includes('\\x1b'), 'control char is visibly escaped in stderr');
 });
 
-test('bin: no subcommand exits non-zero with help text (PeowlyCommandMissingError)', async () => {
-  const { code, stderr, stdout } = await runCli([]);
-  assert.ok(code !== 0, `expected non-zero exit, got ${code}`);
-  // showHelp writes to stdout in peowly-commands
+test('bin: unknown subcommand exits 1 with help text (PeowlyCommandMissingError)', async () => {
+  const { code, stderr, stdout } = await runCli(['bogus']);
+  assert.equal(code, 1);
+  // PeowlyCommandMissingError.showHelp(1) writes help to stdout and exits 1
   const output = stdout + stderr;
   assert.match(output, /eslint-summary/);
   assert.match(output, /prepare|aggregate/);

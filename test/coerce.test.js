@@ -71,7 +71,7 @@ test('parseNumericFlag throws InputError on fractional input (error message pins
 });
 
 // Parameterised throw cases — each case is individually named & reportable.
-for (const raw of ['0', '-3', 'nope', 'Infinity']) {
+for (const raw of ['0', '-3', 'nope', 'Infinity', '1e308']) {
   test(`parseNumericFlag throws InputError on "${raw}"`, () => {
     assert.throws(() => parseNumericFlag(raw, '--x'), InputError);
   });

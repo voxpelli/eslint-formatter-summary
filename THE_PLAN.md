@@ -53,7 +53,7 @@ Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · �
   - Formatter entry (`index.cjs`) and `lib/format-results.js` behavior unchanged except the intentional exceptions documented in README.md: opt-in formatter caps (`EFS_CAP`/`EFS_FILE_CAP`/`EFS_SIZE_CAP`), the `EFS_GITHUB_STEP_SUMMARY` → `EFS_SKIP_GH_SUMMARY` rename, and the summary/sanitization behavior changes
   - Full test suite green, including the real-world self-host
   - File-path entries include `:line` only in CLI output (not in formatter markdown)
-- Notes: Architecture pivot consolidated former PR 3 (per-project output), PR 4 (sticky comment), and PR 5 (canary adoption's library-consumer side) into a single CLI feat minor release.
+- Notes: Architecture pivot consolidated former PR 3 (per-project output), PR 4 (sticky comment), and PR 5 (canary adoption's library-consumer side) into a single CLI feat major release.
 
 ### PR 4 — refactor(canary): consume eslint-summary, delete bespoke tools
 

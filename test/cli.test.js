@@ -625,3 +625,30 @@ test('prepare: empty input file with control chars in path encodes them in stder
   assert.ok(!stderr.includes('\u001B'), 'no raw control char in stderr');
   assert.ok(stderr.includes('\\x1b'), 'control char is visibly escaped in stderr');
 });
+
+test('bin: no subcommand exits non-zero with help text (PeowlyCommandMissingError)', async () => {
+  const { code, stdout, stderr } = await runCli([]);
+  assert.ok(code !== 0, `expected non-zero exit, got ${code}`);
+  // showHelp writes to stdout in peowly-commands
+  const output = stdout + stderr;
+  assert.match(output, /eslint-summary/);
+  assert.match(output, /prepare|aggregate/);
+});
+
+test('bin: unknown flag exits 1 with Invalid input (ERR_PARSE_ARGS_UNKNOWN_OPTION)', async () => {
+  const { code, stderr } = await runCli(['prepare', '--bogus']);
+  assert.equal(code, 1);
+  assert.match(stderr, /Invalid input:/);
+});
+
+test('bin: write failure exits 1 with Unexpected error', async (t) => {
+  const tmp = await tmpDir(t);
+  const inputFile = path.join(tmp, 'input.json');
+  const raw = JSON.stringify([{ filePath: '/proj/a.js', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, messages: [{ ruleId: 'no-undef', severity: 2, line: 1, column: 1, message: 'x' }] }]);
+  await writeFile(inputFile, raw, 'utf8');
+  // --out points to a nonexistent directory — writeFile fails with ENOENT,
+  // propagates as an unclassified error through the bin catch handler.
+  const { code, stderr } = await runCli(['prepare', '--project', 'a/b', '--out', path.join(tmp, 'no-such-dir', 'out.json'), inputFile]);
+  assert.equal(code, 1);
+  assert.match(stderr, /Unexpected error/);
+});

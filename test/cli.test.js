@@ -122,6 +122,23 @@ test('prepare: exits 1 with "empty stdin" when no positional and stdin is empty'
   assert.match(stderr, /empty stdin/);
 });
 
+test('prepare: exits 1 via InputError when stdin JSON is not an array', async () => {
+  const { code, stderr } = await runCli(['prepare'], { input: '{}' });
+  assert.equal(code, 1);
+  assert.match(stderr, /expected an array/);
+  assert.match(stderr, /Invalid input:/);
+});
+
+test('prepare: exits 1 via InputError when file JSON is not an array', async (t) => {
+  const tmp = await tmpDir(t);
+  const inputFile = path.join(tmp, 'object.json');
+  await writeFile(inputFile, '{}', 'utf8');
+  const { code, stderr } = await runCli(['prepare', '--project', 'a/b', inputFile]);
+  assert.equal(code, 1);
+  assert.match(stderr, /expected an array/);
+  assert.match(stderr, /Invalid input:/);
+});
+
 test('prepare: reads raw ESLint JSON from stdin when no positional given', async () => {
   const { code, stderr, stdout } = await runCli(
     ['prepare', '--project', 'acme/demo', '--cwd', '/proj'],

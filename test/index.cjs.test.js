@@ -64,7 +64,7 @@ test('index.cjs returns CLI-formatted string by default', async () => {
 });
 
 test('index.cjs honors EFS_OUTPUT=csv', async (t) => {
-  withEnv(t, { EFS_OUTPUT: 'csv' });
+  withEnv(t, { EFS_OUTPUT: 'csv', GITHUB_STEP_SUMMARY: undefined });
   const out = await formatter(fixture, context);
   assert.match(out, /^errors,warnings,fixable,rule\n/);
 });

@@ -59,7 +59,7 @@ export const runCli = (argv, { cwd, env, input } = {}) => new Promise((resolve, 
  * @param {string} dir
  * @param {ProjectResult} p
  */
-export const writeResultArtifact = async (dir, p) => {
+const writeResultArtifact = async (dir, p) => {
   const sub = path.join(dir, p.project.replaceAll('/', '-'));
   await mkdir(sub, { recursive: true });
   await writeFile(path.join(sub, 'eslint-result.json'), JSON.stringify(p), 'utf8');

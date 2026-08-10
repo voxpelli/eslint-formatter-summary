@@ -1,4 +1,4 @@
-## Feature Requests
+# Feature Requests
 
 - **Expose custom mdast-util-to-markdown handlers through the public options type** (2026-04-21) —
   `MdastToChalkOrMarkdownOptions` currently only exposes `tablePipeAlign`, so consumers

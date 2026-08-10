@@ -217,7 +217,7 @@ Rule ids, file paths, and message details rendered into markdown output (both CL
 - Scrubs substrings matching known secret shapes (`ghp_…` / `ghs_…` / `ghu_…` / `npm_…` / AWS `AKIA…` / PEM block headers) with `[REDACTED]`.
 - Caps string length so a pathological rule name cannot distort the rendered table.
 
-This is defense-in-depth: a misbehaving ESLint plugin or an attacker-authored fork PR (in a canary / fleet-lint setup) should not be able to echo tokens back via the PR sticky comment or the Actions job summary. The CSV branch is unaffected (machine output) and the terminal-colored branch is unaffected (no HTML rendering surface).
+This is defense-in-depth, not a guarantee: the sanitizer only redacts recognized secret patterns (`ghp_` / `ghs_` / `gho_` / `ghu_` / `ghr_` / `github_pat_` / `npm_` / AWS `AKIA` / PEM block headers). Custom-prefixed or encoded secrets are not caught. Jobs that execute untrusted ESLint code (e.g. canary builds on fork PRs) must not be provided with secrets in the first place — the sanitizer is a safety net, not a substitute for secret isolation. The CSV branch is unaffected (machine output) and the terminal-colored branch is unaffected (no HTML rendering surface).
 
 ## GitHub Actions delivery
 

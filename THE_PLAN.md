@@ -29,7 +29,7 @@
 | P0.3 | BM note: deferred ideas + revival triggers                    | ✅     | —                        | —   | n/a     |
 | PR 1a+1b | fix+feat!: harden markdown + classify non-rule messages   | ✅     | P0.1                     | [#24](https://github.com/voxpelli/eslint-formatter-summary/pull/24) | major   |
 | PR 2 | ~~markdown-or-chalk break handlers~~                          | ❌ dropped | —                     | n/a | n/a     |
-| PR 3 | feat: add eslint-summary CLI (prepare + aggregate)            | 🟠     | PR 1b                    | [#26](https://github.com/voxpelli/eslint-formatter-summary/pull/26) | minor   |
+| PR 3 | feat: add eslint-summary CLI (prepare + aggregate)            | 🟠     | PR 1b                    | [#26](https://github.com/voxpelli/eslint-formatter-summary/pull/26) | major   |
 | PR 4 | refactor(canary): consume eslint-summary, delete bespoke tools (eslint-config-voxpelli) | ⬜ | PR 3 published | —  | n/a     |
 
 Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · ❌ dropped · 🔴 blocked
@@ -37,6 +37,7 @@ Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · �
 ## PR detail
 
 ### PR 3 — feat: add eslint-summary CLI (prepare + aggregate)
+
 - Branch: `feat/eslint-summary-cli`
 - Absorbs:
   - `../eslint-config-voxpelli/tools/prepare-eslint-result.js` → `eslint-summary prepare`
@@ -55,6 +56,7 @@ Legend: ⬜ not started · 🟡 in progress · 🟠 in review · ✅ merged · �
 - Notes: Architecture pivot consolidated former PR 3 (per-project output), PR 4 (sticky comment), and PR 5 (canary adoption's library-consumer side) into a single CLI feat minor release.
 
 ### PR 4 — refactor(canary): consume eslint-summary, delete bespoke tools
+
 - Repo: `eslint-config-voxpelli`
 - Branch: `refactor/adopt-eslint-summary`
 - AC: canary workflow invokes `eslint-summary prepare` in matrix jobs and `eslint-summary aggregate` in the summary job; both `tools/prepare-eslint-result.js` and `tools/generate-canary-comment.js` deleted; grep finds no dangling references; canary CI runs green on a representative fixture.

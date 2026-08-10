@@ -6,7 +6,7 @@
   `--project-count 25`, `--file-cap 50`) have to either declare them as
   `type: 'string'` and pass through `Number()` at use time, or hand-roll a
   validation helper that exits 2 on NaN. We do the latter in
-  `lib/cli/cmd-aggregate.js` (`parseNumericFlag`). When peowly ships the
+  `lib/cli/coerce.js` (`parseNumericFlag`). When peowly ships the
   extension, the helper can be deleted and the flag config becomes
   self-documenting for tsc.
   Ownership: upstream · Workaround: full — a ~10-LOC validator per CLI.

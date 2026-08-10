@@ -90,6 +90,15 @@ test('renderFileSpan rejects `..` segments — no href escapes the repo', () => 
   assert.ok(out.includes('..'), 'the raw path still renders (but sanitized, no href)');
 });
 
+test('renderFileSpan falls back to plain code for lone surrogates (no URIError crash)', () => {
+  // encodeURIComponent throws URIError on lone surrogates. A tampered artifact
+  // could place a lone surrogate in a file path; isWellFormed() catches it
+  // and falls back to the plain <code> span, matching the .. segment pattern.
+  const out = renderFileSpan('src/foo\uD800.js:1', 'owner/repo');
+  assert.doesNotMatch(out, /<a /, 'no anchor — must fall back to plain code');
+  assert.ok(out.includes('<code>'), 'plain-code span expected');
+});
+
 test('renderFileSpan rejects single `..` segment in the middle of a path', () => {
   const out = renderFileSpan('src/../secret:1', 'owner/repo');
   assert.doesNotMatch(out, /href=/);

@@ -16,7 +16,7 @@ import { isValidProjectResult } from '../lib/cli/validate-project-result.js';
 test('accepts valid shapes', () => {
   assert.equal(isValidProjectResult({ project: 'a/b', errorCount: 0, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 1, rules: { 'no-undef': { errors: 0, warnings: 0, fixable: 1, files: ['a.js:1'] } }, syntheticKeys: [] }), true);
   assert.equal(isValidProjectResult({ project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } } }), true, 'syntheticKeys optional');
-  assert.equal(isValidProjectResult({ project: '', errorCount: 0, warningCount: 1, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { warnings: 1, files: ['a.js:1'] } } }), true, 'empty project (prepare default) is valid');
+  assert.equal(isValidProjectResult({ project: '', errorCount: 0, warningCount: 1, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, warnings: 1, fixable: 0, files: ['a.js:1'] } } }), true, 'empty project (prepare default) is valid');
   assert.equal(isValidProjectResult({
     project: 'a/b',
     errorCount: 2,
@@ -69,8 +69,15 @@ for (const [label, input] of /** @type {Array<[string, unknown]>} */ ([
   ['errorCount float', { project: 'a/b', errorCount: 1.5, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 1, files: ['a.js:1'] } } }],
   ['fixableErrorCount NaN', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: Number.NaN, fixableWarningCount: 0, rules: { 'no-undef': { errors: 1, files: ['a.js:1'] } } }],
   ['zero counts with empty rules', { project: 'a/b', errorCount: 0, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: {} }],
-  ['bucket errors string', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 'x', files: ['a.js:1'] } } }],
-  ['bucket fixable boolean', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { fixable: true, files: ['a.js:1'] } } }],
+  ['bucket errors string', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 'x', warnings: 0, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket fixable boolean', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, warnings: 0, fixable: true, files: ['a.js:1'] } } }],
+  ['bucket errors negative', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: -1, warnings: 0, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket errors float', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 1.5, warnings: 0, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket warnings negative', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, warnings: -1, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket fixable float', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, warnings: 0, fixable: 1.5, files: ['a.js:1'] } } }],
+  ['bucket errors missing', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { warnings: 0, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket warnings missing', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, fixable: 0, files: ['a.js:1'] } } }],
+  ['bucket fixable missing', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { errors: 0, warnings: 0, files: ['a.js:1'] } } }],
   // rule-bucket shape
   ['bucket null', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': null } }],
   ['bucket files non-array', { project: 'a/b', errorCount: 1, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: { 'no-undef': { files: 'a.js:1' } } }],

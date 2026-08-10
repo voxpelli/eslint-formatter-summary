@@ -627,7 +627,7 @@ test('prepare: empty input file with control chars in path encodes them in stder
 });
 
 test('bin: no subcommand exits non-zero with help text (PeowlyCommandMissingError)', async () => {
-  const { code, stdout, stderr } = await runCli([]);
+  const { code, stderr, stdout } = await runCli([]);
   assert.ok(code !== 0, `expected non-zero exit, got ${code}`);
   // showHelp writes to stdout in peowly-commands
   const output = stdout + stderr;

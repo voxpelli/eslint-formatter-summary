@@ -179,12 +179,12 @@ test('aggregate: clean-run message sanitizes markup and control chars in --eslin
   const results = path.join(tmp, 'results');
   await mkdir(results, { recursive: true });
   const { code, stdout } = await runCli(
-    ['aggregate', '--project-count', '2', '--eslint-versions', '9.22,<b>10</b>,\x1b[31m11\x1b[0m', results]
+    ['aggregate', '--project-count', '2', '--eslint-versions', '9.22,<b>10</b>,\u001B[31m11\u001B[0m', results]
   );
   assert.equal(code, 0);
   assert.match(stdout, /&lt;b&gt;10&lt;\/b&gt;/, 'markup must be HTML-escaped');
   assert.doesNotMatch(stdout, /<b>10<\/b>/, 'no raw markup may reach the message');
-  assert.ok(!stdout.includes('\x1b'), 'no raw escape char may reach the message');
+  assert.ok(!stdout.includes('\u001B'), 'no raw escape char may reach the message');
 });
 
 test('aggregate: --eslint-versions parsing handles single, spaced, and empty segments', async (t) => {
@@ -556,4 +556,37 @@ test('aggregate: scrubs secret-shaped strings in rule ids and file paths', async
   assert.doesNotMatch(stdout, new RegExp(npmToken));
   assert.doesNotMatch(stdout, new RegExp(awsKey));
   assert.match(stdout, /\[REDACTED\]/);
+});
+
+test('aggregate: --sort-by with control characters encodes them in stderr', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await mkdir(results, { recursive: true });
+  const { code, stderr } = await runCli(['aggregate', '--sort-by', '\u001B[2Jevil', results]);
+  assert.equal(code, 1);
+  assert.match(stderr, /sort-by/);
+  assert.ok(!stderr.includes('\u001B'), 'no raw control char in stderr');
+  assert.ok(stderr.includes('\\x1b'), 'control char is visibly escaped in stderr');
+});
+
+test('aggregate: results-dir with control characters encodes them in stderr', async (t) => {
+  const tmp = await tmpDir(t);
+  // Create a directory whose name contains a control character — the ENOENT
+  // / ENOTDIR path reaches InputError which reaches console.error.
+  const evilDir = path.join(tmp, 'res\u001B[2Jults');
+  const { code, stderr } = await runCli(['aggregate', evilDir]);
+  assert.equal(code, 1);
+  assert.ok(!stderr.includes('\u001B'), 'no raw control char in stderr');
+  assert.ok(stderr.includes('\\x1b'), 'control char is visibly escaped in stderr');
+});
+
+test('prepare: empty input file with control chars in path encodes them in stderr', async (t) => {
+  const tmp = await tmpDir(t);
+  const evilFile = path.join(tmp, 'in\u001B[2Jput.json');
+  await writeFile(evilFile, '   \n  ', 'utf8');
+  const { code, stderr } = await runCli(['prepare', '--project', 'a/b', evilFile]);
+  assert.equal(code, 1);
+  assert.match(stderr, /empty/);
+  assert.ok(!stderr.includes('\u001B'), 'no raw control char in stderr');
+  assert.ok(stderr.includes('\\x1b'), 'control char is visibly escaped in stderr');
 });

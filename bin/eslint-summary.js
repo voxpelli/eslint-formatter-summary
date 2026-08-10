@@ -6,7 +6,7 @@ import { messageWithCauses, stackWithCauses } from 'pony-cause';
 
 import { cmdAggregate } from '../lib/cli/cmd-aggregate.js';
 import { cmdPrepare } from '../lib/cli/cmd-prepare.js';
-import { InputError, isErrorWithCode } from '../lib/cli/errors.js';
+import { encodeForStderr, InputError, isErrorWithCode } from '../lib/cli/errors.js';
 
 /** @import { CliCommands } from 'peowly-commands' */
 
@@ -58,9 +58,12 @@ try {
       errorTitle = 'Unexpected error with no details';
     }
 
-    console.error(`${chalk.white.bgRed(errorTitle + ':')} ${errorMessage}`);
+    // Encode untrusted values that may reach errorMessage (via InputError
+    // messages interpolating CLI args) or errorBody (stack traces with
+    // file paths). encodeForStderr is idempotent on already-encoded strings.
+    console.error(`${chalk.white.bgRed(errorTitle + ':')} ${encodeForStderr(errorMessage)}`);
     if (errorBody) {
-      console.error('\n' + errorBody);
+      console.error('\n' + encodeForStderr(errorBody));
     }
 
     process.exit(1);

@@ -14,7 +14,7 @@ test('prepareProjectResult returns undefined when input is not an array', () => 
 });
 
 test('prepareProjectResult returns undefined when zero errors and warnings', () => {
-  const raw = [{ filePath: '/repo/a.js', errorCount: 0, warningCount: 0, messages: [] }];
+  const raw = [{ filePath: '/repo/a.js', errorCount: 0, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, messages: [] }];
   assert.equal(prepareProjectResult(raw, { baseDir }), undefined);
 });
 

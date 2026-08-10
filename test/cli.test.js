@@ -353,6 +353,24 @@ test('aggregate: exits 1 when every candidate has an invalid result shape', asyn
   assert.match(stderr, /Invalid input: all 2 candidate artifact\(s\) in .+ were skipped/);
 });
 
+test('aggregate: rejects zero-count artifact with empty rules as invalid', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  // A zero-count artifact with empty rules is not a valid ProjectResult —
+  // prepareProjectResult returns undefined on zero findings, so this shape
+  // is either tampered or from a non-conforming third-party tool.
+  const subdir = path.join(results, 'proj-a');
+  await mkdir(subdir, { recursive: true });
+  await writeFile(
+    path.join(subdir, 'eslint-result.json'),
+    JSON.stringify({ project: 'a/b', errorCount: 0, warningCount: 0, fixableErrorCount: 0, fixableWarningCount: 0, rules: {} }),
+    'utf8'
+  );
+  const { code, stdout } = await runCli(['aggregate', results]);
+  assert.equal(code, 1);
+  assert.doesNotMatch(stdout, /All .* external projects pass/, 'no success banner for rejected zero-count artifact');
+});
+
 test('aggregate: escapes control characters in skipped-artifact paths on stderr', async (t) => {
   const tmp = await tmpDir(t);
   const results = path.join(tmp, 'results');

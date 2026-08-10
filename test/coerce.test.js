@@ -33,12 +33,12 @@ test('toCount rejects booleans and other coercible shapes (regression: tampered 
   assert.equal(toCount([5]), 0);
 });
 
-test('toCount collapses Infinity to 0 (regression: tampered artifact used to render "Infinity errors")', () => {
+test('toCount collapses Infinity and unsafe-large numbers to 0 (regression: tampered artifact used to render "Infinity errors" or "1.79e+308 errors")', () => {
   assert.equal(toCount(Number.POSITIVE_INFINITY), 0);
   assert.equal(toCount(Number.NEGATIVE_INFINITY), 0);
   assert.equal(toCount('Infinity'), 0);
-  assert.equal(toCount(1e308), 1e308);        // finite large number passes through
-  assert.equal(toCount(Number.MAX_VALUE), Number.MAX_VALUE);
+  assert.equal(toCount(1e308), 0);                  // finite but not a safe integer
+  assert.equal(toCount(Number.MAX_VALUE), 0);       // finite but not a safe integer
 });
 
 test('toCount clamps negative values to 0', () => {

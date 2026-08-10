@@ -117,6 +117,15 @@ test('format() markdown drops non-http docs URLs (javascript: scheme is stripped
   assert.ok(!/\[semi\]\(/.test(out), 'no markdown link should be emitted for unsafe URL');
 });
 
+test('format() markdown percent-encodes ) and | in docs URLs to prevent link/table breakage', () => {
+  const out = runFormat(fixture, {
+    rulesMeta: { semi: { docs: { url: 'https://example.test/semi?x=)|evil' } } },
+  });
+  assert.ok(out.includes('%29'), 'closing paren must be percent-encoded in URL');
+  assert.ok(out.includes('%7C'), 'pipe char must be percent-encoded in URL');
+  assert.ok(!out.includes(')|'), 'raw )| must not appear in the markdown link');
+});
+
 test('format() markdown: shape-failing rule ids never reach the rendered row', () => {
   const out = runFormat(results([
     { filePath: '/p/a.js', messages: [{ ruleId: 'my-plugin/<script>', severity: 2, line: 1, column: 1, message: 'x' }] },

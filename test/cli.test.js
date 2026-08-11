@@ -652,3 +652,14 @@ test('bin: write failure exits 1 with Unexpected error', async (t) => {
   assert.equal(code, 1);
   assert.match(stderr, /Unexpected error/);
 });
+
+test('aggregate: bidi control chars in directory name are encoded on stderr', async (t) => {
+  const tmp = await tmpDir(t);
+  // U+202E (Right-to-Left Override) in a directory name — encodeForStderr
+  // must escape it so it cannot visually reorder the error line in CI logs.
+  const evilDir = path.join(tmp, 'res\u202Eults');
+  const { code, stderr } = await runCli(['aggregate', evilDir]);
+  assert.equal(code, 1);
+  assert.ok(!stderr.includes('\u202E'), 'no raw bidi char in stderr');
+  assert.ok(stderr.includes('\\x202e'), 'bidi char is visibly escaped in stderr');
+});

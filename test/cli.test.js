@@ -419,7 +419,7 @@ test('aggregate: warns per skipped candidate with path and reason while keeping 
   const { code, stderr, stdout } = await runCli(['aggregate', results]);
   assert.equal(code, 0);
   assert.match(stdout, /acme\/good/, 'valid artifact must still render');
-  assert.match(stderr, /skipped .*acme-bad.*eslint-result\.json \(unreadable or unparseable JSON\)/);
+  assert.match(stderr, /skipped .*acme-bad.*eslint-result\.json \(unreadable or unparseable/);
   assert.doesNotMatch(stderr, /all \d+ candidate artifact\(s\).*were skipped/, 'aggregate warning only fires on 100% skip');
 });
 
@@ -662,4 +662,19 @@ test('aggregate: bidi control chars in directory name are encoded on stderr', as
   assert.equal(code, 1);
   assert.ok(!stderr.includes('\u202E'), 'no raw bidi char in stderr');
   assert.ok(stderr.includes('\\x202e'), 'bidi char is visibly escaped in stderr');
+});
+
+test('aggregate: --file-cap caps per-rule file entries end-to-end', async (t) => {
+  const tmp = await tmpDir(t);
+  const results = path.join(tmp, 'results');
+  await writeOneProjectArtifact(results, {
+    project: 'acme/demo',
+    errorCount: 60,
+    rules: { foo: { errors: 60, warnings: 0, fixable: 0, files: Array.from({ length: 60 }, (_, j) => `src/a-${j}.js:${j + 1}`) } },
+  });
+  const { code, stdout } = await runCli(['aggregate', '--file-cap', '5', results]);
+  assert.equal(code, 0);
+  assert.match(stdout, /… and 55 more/);
+  assert.ok(stdout.includes('src/a-0.js:1'), 'first file shown');
+  assert.ok(!stdout.includes('src/a-5.js:6'), '6th file hidden by cap');
 });

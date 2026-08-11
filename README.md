@@ -209,6 +209,8 @@ Flags: `--full` (uncapped markdown), `--project-count <n>` (for "all N pass" mes
 
 `aggregate` always emits output — the clean-run message on an empty results directory, the fleet comment otherwise — so the workflow's success gate is the exit code, not a `[ -s comment.md ]` check on the output file.
 
+When all projects pass, `prepare` writes no artifact (zero findings → no output), so the results directory may be empty or contain subdirectories without `eslint-result.json` files. `aggregate` treats this as a clean run — the `--project-count` flag makes the “All N pass” message accurate in this case. If a workflow pre-creates project subdirectories before running `prepare`, a fully-green fleet will still produce zero artifacts by design.
+
 ### Defensive sanitization
 
 Rule ids, file paths, and message details rendered into markdown output (both CLI and formatter paths) pass through a sanitization layer that:

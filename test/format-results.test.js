@@ -77,6 +77,20 @@ test('format() csv sort-by-warnings puts the only warning rule first', () => {
   assert.equal(rows[0], '0,2,2,"semi"');
 });
 
+test('format() csv sort-by-rule orders by rule id ascending', () => {
+  const rows = runFormat(fixture, { output: 'csv', sortByProp: 'rule' }).split('\n').slice(1);
+  assert.equal(rows[0], '2,0,0,"no-undef"', 'alphabetical: no-undef first');
+  assert.equal(rows[1], '2,0,0,"no-unused-vars"', 'alphabetical: no-unused-vars second');
+  assert.equal(rows[2], '0,2,2,"semi"', 'alphabetical: semi last');
+});
+
+test('format() csv sort-by-rule with sortReverse inverts to descending', () => {
+  const rows = runFormat(fixture, { output: 'csv', sortByProp: 'rule', sortReverse: true }).split('\n').slice(1);
+  assert.equal(rows[0], '0,2,2,"semi"', 'reverse alphabetical: semi first');
+  assert.equal(rows[1], '2,0,0,"no-unused-vars"');
+  assert.equal(rows[2], '2,0,0,"no-undef"');
+});
+
 test('format() markdown produces a table with expected columns', () => {
   const out = runFormat(fixture);
   assert.match(out, /\| Errors +\| Warnings +\| Fixable +\| Rule +\|/);

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import stripControls from '../lib/strip-controls.js';
+import { stripControls } from '../lib/utils/text.js';
 
 test('stripControls removes zero-width space (U+200B)', () => {
   assert.equal(stripControls('a​b'), 'ab');
@@ -11,6 +11,10 @@ test('stripControls removes bidi overrides (U+202A–U+202E)', () => {
   for (const cp of [0x202A, 0x202B, 0x202C, 0x202D, 0x202E]) {
     assert.equal(stripControls('a' + String.fromCodePoint(cp) + 'b'), 'ab', `failed for U+${cp.toString(16)}`);
   }
+});
+
+test('stripControls removes Arabic Letter Mark (U+061C)', () => {
+  assert.equal(stripControls('a' + String.fromCodePoint(0x061C) + 'b'), 'ab');
 });
 
 test('stripControls removes word-joiner / invisible-operator range (U+2060–U+2069)', () => {

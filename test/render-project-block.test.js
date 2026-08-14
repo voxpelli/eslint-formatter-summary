@@ -1,0 +1,150 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+
+import { renderProjectBlock } from '../lib/cli/render-project-block.js';
+import { makeProjectResult as make } from './_helpers.js';
+
+test('renderProjectBlock wraps in <details> with a summary line', () => {
+  const out = renderProjectBlock(make({
+    errorCount: 2,
+    warningCount: 1,
+    rules: { 'no-undef': { errors: 2, warnings: 1, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.match(out, /^<details>\n<summary>/);
+  assert.ok(out.includes('2 errors, 1 warnings'));
+  assert.ok(out.endsWith('\n</details>\n\n'));
+});
+
+test('renderProjectBlock shows fixable count in summary when >0', () => {
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    fixableErrorCount: 1,
+    rules: { semi: { errors: 1, warnings: 0, fixable: 1, files: ['a.js:1'] } },
+  }));
+  assert.ok(out.includes('1 errors, 0 warnings (1 fixable 🔧)'));
+});
+
+test('renderProjectBlock appends the eslint version to the project label when present', () => {
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    eslintVersion: '9.22',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(out.includes('(eslint 9.22)'), 'version suffix after the label');
+});
+
+test('renderProjectBlock omits the version suffix when eslintVersion is absent', () => {
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(!out.includes('(eslint '), 'no version suffix without eslintVersion');
+});
+
+test('renderProjectBlock sanitizes a tampered eslintVersion (no markup injection)', () => {
+  // The version is artifact-sourced (untrusted) — a regression removing
+  // escapeHtml/sanitizeUntrusted from the label path would leak raw markup
+  // into the <summary> line.
+  const out = renderProjectBlock(make({
+    project: 'owner/demo',
+    eslintVersion: '<b>9.22</b>',
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.ok(out.includes('&lt;b&gt;9.22&lt;/b&gt;'), 'markup must be HTML-escaped');
+  assert.ok(!out.includes('<b>9.22</b>'), 'no raw markup may reach the summary line');
+});
+
+test('renderProjectBlock renders a ? line entry as a plain span (no #L? anchor)', () => {
+  // Fatal parse errors can produce `path:?` entries (the line-fallback). The
+  // anchor regex requires digits, so a `?` line must render as plain text —
+  // a regression emitting a broken `#L?` anchor would fail here.
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: { '(parser error)': { errors: 1, warnings: 0, fixable: 0, files: ['broken.js:?'] } },
+  }));
+  assert.ok(out.includes('broken.js:?'), 'entry must render');
+  assert.doesNotMatch(out, /#L\?/, 'no anchor may be emitted for a non-numeric line');
+});
+
+test('renderProjectBlock emits pipe-table header', () => {
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.match(out, /\| Errors \| Warnings \| Fixable \| Rule \|/);
+  assert.match(out, /\|-------:\|---------:\|--------:\|------\|/);
+});
+
+test('renderProjectBlock sorts rules by errors desc, then warnings desc, then id asc', () => {
+  const out = renderProjectBlock(make({
+    errorCount: 4,
+    warningCount: 1,
+    rules: {
+      'b-rule': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] },
+      'a-rule': { errors: 2, warnings: 0, fixable: 0, files: ['a.js:1'] },
+      'c-rule': { errors: 1, warnings: 1, fixable: 0, files: ['a.js:1'] },
+    },
+  }));
+  const aIdx = out.indexOf('<code>a-rule</code>');
+  const bIdx = out.indexOf('<code>b-rule</code>');
+  const cIdx = out.indexOf('<code>c-rule</code>');
+  assert.ok(aIdx < cIdx && cIdx < bIdx, 'a(2err) before c(1err,1warn) before b(1err,0warn)');
+});
+
+test('renderProjectBlock truncates per-rule file list at fileCap with overflow trailer', () => {
+  const files = Array.from({ length: 7 }, (_, i) => `a.js:${i + 1}`);
+  const out = renderProjectBlock(make({
+    errorCount: 7,
+    rules: { 'no-undef': { errors: 7, warnings: 0, fixable: 0, files } },
+  }), { fileCap: 3 });
+  assert.ok(out.includes('… and 4 more'));
+  assert.ok(out.includes('a.js:1'));
+  assert.ok(out.includes('a.js:3'));
+  assert.ok(!out.includes('a.js:4'), 'fourth file should be hidden by cap');
+});
+
+test('renderProjectBlock renders fixable column as dash when zero', () => {
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: { 'no-undef': { errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] } },
+  }));
+  assert.match(out, /\| 1 \| 0 \| - \|/);
+});
+
+test('renderProjectBlock sort is stable when bucket counts are tampered (non-finite / non-numeric)', () => {
+  // A tampered artifact that reaches render without toCount in the sort
+  // comparator would produce NaN-dominated ordering (Infinity - Infinity, or
+  // 'xx' - 0). Coercing inside the comparator makes the order deterministic:
+  // `a` has 3 real errors, `b` has 0 (tampered Infinity collapses to 0 via
+  // toCount in the render interpolation AND in the sort).
+  const out = renderProjectBlock(make({
+    errorCount: 3,
+    rules: {
+      'b-tampered': { errors: /** @type {any} */ ('Infinity'), warnings: 0, fixable: 0, files: ['b.js:1'] },
+      'a-real': { errors: 3, warnings: 0, fixable: 0, files: ['a.js:1'] },
+    },
+  }));
+  // The row for `a-real` must appear before `b-tampered`.
+  const aIdx = out.indexOf('a-real');
+  const bIdx = out.indexOf('b-tampered');
+  assert.ok(aIdx > 0 && bIdx > 0 && aIdx < bIdx,
+    `a-real should precede b-tampered in sorted output (got a@${aIdx}, b@${bIdx})`);
+  assert.doesNotMatch(out, /Infinity/, 'no Infinity leaks into rendered counts');
+});
+
+test('renderProjectBlock uses the Object.entries key, not a spoofed bucket.id', () => {
+  // A tampered artifact could carry an `id` field inside a rule bucket that
+  // disagrees with the map key. The spread must place `id` last so the key
+  // always wins — otherwise the spoofed id renders in the Rule cell.
+  const out = renderProjectBlock(make({
+    errorCount: 1,
+    rules: {
+      'real-id': /** @type {any} */ ({ id: 'spoofed-id', errors: 1, warnings: 0, fixable: 0, files: ['a.js:1'] }),
+    },
+  }));
+  assert.ok(out.includes('<code>real-id</code>'), 'key should render in the Rule cell');
+  assert.ok(!out.includes('spoofed-id'), 'bucket.id must not override the map key');
+});

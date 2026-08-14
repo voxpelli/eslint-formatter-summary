@@ -1,9 +1,10 @@
 {
-  "extends": "@voxpelli/tsconfig/node20.json",
+  "extends": "@voxpelli/tsconfig/node22.json",
   "files": [
     "index.cjs"
   ],
   "include": [
     "lib/**/*.js",
+    "test/**/*.js"
   ]
 }

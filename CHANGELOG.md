@@ -1,5 +1,27 @@
 # Changelog
 
+## [5.0.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.2.0...v5.0.0) (2026-08-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli:** aggregate no longer auto-writes to $GITHUB_STEP_SUMMARY. Callers must redirect explicitly: `eslint-summary aggregate --full results/ >> "$GITHUB_STEP_SUMMARY"`.
+* MessageSummary is now a discriminated union with `kind` ('rule' | 'synthetic') and a shared `id` field (the rule ID for kind='rule', a parenthesized synthetic key otherwise). The previous `ruleId` property is gone. The string 'syntax error' no longer appears in output — parser errors now render as (parser error). Consumers reaching for `.ruleId` on summary rows must narrow on `kind === 'rule'` and read `.id` instead. CSV output shape is unchanged (still errors,warnings,fixable,rule), but the value in the rule column may now be a synthetic key.
+
+### 🌟 Features
+
+* **cli:** add eslint-summary CLI (prepare + aggregate subcommands) ([#26](https://github.com/voxpelli/eslint-formatter-summary/issues/26)) ([7be7b35](https://github.com/voxpelli/eslint-formatter-summary/commit/7be7b35363da9c2a96cfce5a375cbd5411f2c33b))
+
+
+### 🩹 Fixes
+
+* harden markdown output and classify non-rule messages ([#24](https://github.com/voxpelli/eslint-formatter-summary/issues/24)) ([56297c6](https://github.com/voxpelli/eslint-formatter-summary/commit/56297c6b07f236a90c61cb81b158ac91c738d973))
+
+
+### 🧹 Chores
+
+* **deps:** update dependency @voxpelli/typed-utils to v5 ([#32](https://github.com/voxpelli/eslint-formatter-summary/issues/32)) ([46ddec6](https://github.com/voxpelli/eslint-formatter-summary/commit/46ddec6236f57a94a39530f52da20e05cdccf05d))
+
 ## [4.2.0](https://github.com/voxpelli/eslint-formatter-summary/compare/v4.1.0...v4.2.0) (2026-04-20)
 
 

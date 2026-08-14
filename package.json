@@ -66,7 +66,7 @@
     "eslint": ">=9.13.0"
   },
   "devDependencies": {
-    "@ast-grep/cli": "^0.44.1",
+    "@ast-grep/cli": "^0.45.1",
     "@types/node": "^22",
     "@voxpelli/ast-grep-rules": "^0.1.0",
     "@voxpelli/eslint-config": "^25.1.0",

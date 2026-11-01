@@ -70,7 +70,7 @@
     "@types/node": "^22",
     "@voxpelli/ast-grep-rules": "^0.1.0",
     "@voxpelli/eslint-config": "^25.1.0",
-    "@voxpelli/tsconfig": "^16.2.1",
+    "@voxpelli/tsconfig": "^17.0.0",
     "c8": "^11.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^9.39.4",
@@ -79,7 +79,7 @@
     "knip": "^6.6.2",
     "npm-run-all2": "^8.0.4",
     "type-coverage": "^2.29.7",
-    "typescript": "~6.0.2",
+    "typescript": "~7.0.2",
     "validate-conventional-commit": "^1.0.4"
   }
 }
